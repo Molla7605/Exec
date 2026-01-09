@@ -1,0 +1,8 @@
+cmake-*
+out
+.vs
+.idea
+build
+bin
+tmp
+*.bak
