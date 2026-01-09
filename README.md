@@ -1,5 +1,5 @@
 # Exec
-This library was created as part of my work to understand the [P2300](https://cplusplus.github.io/sender-receiver/execution.html#spec-execution.syn) proposal. 
+This library was created as part of my work to understand the [P2300](https://cplusplus.github.io/sender-receiver/execution.html) proposal. 
 It might look messy or terrible, but it works well for my use cases. (Probably) ¯\\_(ツ)_/¯
 
 ### Requirements
