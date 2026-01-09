@@ -77,15 +77,15 @@ namespace exec {
     };
     inline constexpr get_delegation_scheduler_t get_delegation_scheduler{};
 
-    template<typename CompletionT>
+    template<typename TagT>
     struct get_completion_scheduler_t {
         template<typename EnvT>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
             return env.query(*this);
         }
     };
-    template<typename CompletionT>
-    inline constexpr get_completion_scheduler_t<CompletionT> get_completion_scheduler{};
+    template<typename TagT>
+    inline constexpr get_completion_scheduler_t<TagT> get_completion_scheduler{};
 
     // TODO: struct get_domain_t{};
 
@@ -182,8 +182,8 @@ namespace exec {
         template<typename SignatureT, typename ReceiverT>
         concept valid_completion_for =
             requires(SignatureT* sig) {
-                []<typename CompletionT, typename... Ts>(CompletionT(*)(Ts...))
-                    requires std::invocable<CompletionT, std::remove_cvref_t<ReceiverT>, Ts...> {}(sig);
+                []<typename TagT, typename... Ts>(TagT(*)(Ts...))
+                    requires std::invocable<TagT, std::remove_cvref_t<ReceiverT>, Ts...> {}(sig);
             };
 
         template<typename ReceiverT, typename SignatureT>
@@ -302,25 +302,22 @@ namespace exec {
         template<typename...>
         struct signature_info {};
 
-        template<typename CompletionT, typename... Ts>
-        struct signature_info<CompletionT(Ts...)> {
-            using tag = CompletionT;
+        template<typename TagT, typename... Ts>
+        struct signature_info<TagT(Ts...)> {
+            using tag = TagT;
 
             template<template<typename...> typename T>
-            using apply_args = meta_apply_t<T, Ts...>;
+            using apply = meta_apply_t<T, Ts...>;
 
             template<typename InvocableT>
             using invoke_result = std::invoke_result_t<InvocableT, Ts...>;
-
-            template<typename T>
-            using swap_tag = T(Ts...);
         };
 
         template<template<typename...> typename, typename...>
         struct select_signatures_by_tag {};
 
-        template<template<typename...> typename TypeListT, typename CompletionT, typename... SignatureTs>
-        struct select_signatures_by_tag<TypeListT, CompletionT, completion_signatures<SignatureTs...>, completion_signatures<>> {
+        template<template<typename...> typename TypeListT, typename TagT, typename... SignatureTs>
+        struct select_signatures_by_tag<TypeListT, TagT, completion_signatures<SignatureTs...>, completion_signatures<>> {
             using self = select_signatures_by_tag;
 
             using type = TypeListT<SignatureTs...>;
@@ -329,12 +326,12 @@ namespace exec {
             using apply = T<SignatureTs...>;
         };
 
-        template<template<typename...> typename TypeListT, typename CompletionT, typename... SignatureTs, typename T, typename... Ts>
-        struct select_signatures_by_tag<TypeListT, CompletionT, completion_signatures<SignatureTs...>, completion_signatures<T, Ts...>> {
+        template<template<typename...> typename TypeListT, typename TagT, typename... SignatureTs, typename T, typename... Ts>
+        struct select_signatures_by_tag<TypeListT, TagT, completion_signatures<SignatureTs...>, completion_signatures<T, Ts...>> {
             using self = std::conditional_t<
-                std::is_same_v<CompletionT, typename signature_info<T>::tag>,
-                typename select_signatures_by_tag<TypeListT, CompletionT, completion_signatures<SignatureTs..., T>, completion_signatures<Ts...>>::self,
-                typename select_signatures_by_tag<TypeListT, CompletionT, completion_signatures<SignatureTs...>, completion_signatures<Ts...>>::self
+                std::is_same_v<TagT, typename signature_info<T>::tag>,
+                typename select_signatures_by_tag<TypeListT, TagT, completion_signatures<SignatureTs..., T>, completion_signatures<Ts...>>::self,
+                typename select_signatures_by_tag<TypeListT, TagT, completion_signatures<SignatureTs...>, completion_signatures<Ts...>>::self
             >;
 
             using type = self::type;
@@ -343,24 +340,24 @@ namespace exec {
             using apply = self::template apply<type>;
         };
 
-        template<template<typename...> typename TypeListT, typename CompletionT, typename SignatureT>
-        using select_signatures_by_tag_t = select_signatures_by_tag<TypeListT, CompletionT, TypeListT<>, SignatureT>::self;
+        template<template<typename...> typename TypeListT, typename TagT, typename SignatureT>
+        using select_signatures_by_tag_t = select_signatures_by_tag<TypeListT, TagT, TypeListT<>, SignatureT>::self;
 
         template<template<typename...> typename TupleT, template<typename...> typename VariantT>
         struct meta_apply_helper {
             template<typename... Ts>
-            using apply = meta_apply_t<VariantT, typename signature_info<Ts>::template apply_args<TupleT>...>;
+            using apply = meta_apply_t<VariantT, typename signature_info<Ts>::template apply<TupleT>...>;
         };
 
         template<typename... Ts>
         using add_signatures = meta_add_t<completion_signatures, Ts...>;
 
-        template<typename CompletionT,
+        template<typename TagT,
                  valid_completion_signatures SignatureT,
                  template<typename...> typename TupleT,
                  template<typename...> typename VariantT>
         using gather_signatures =
-            select_signatures_by_tag_t<completion_signatures, CompletionT, SignatureT>::template apply<meta_apply_helper<TupleT, VariantT>::template apply>;
+            select_signatures_by_tag_t<completion_signatures, TagT, SignatureT>::template apply<meta_apply_helper<TupleT, VariantT>::template apply>;
 
         template<typename StoppedT>
         struct stopped_wrapper {
