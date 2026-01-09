@@ -14,13 +14,8 @@
 #include <variant>
 
 namespace exec {
-    // template<typename T>
-    // concept moveable_value = ;
-
-
     template<typename type>
     concept queryable = std::destructible<type>;
-
 
     struct get_stop_token_t {
         template<typename EnvT>
@@ -35,16 +30,12 @@ namespace exec {
             return token;
         }
     };
-
-    //TODO: inline constexpr forwarding_query_t forwarding_query{};
     inline constexpr get_stop_token_t get_stop_token{};
+
+    // TODO: inline constexpr forwarding_query_t forwarding_query{};
+
     template<typename T>
     using stop_token_of_t = std::remove_cvref_t<decltype(get_stop_token(std::declval<T>()))>;
-
-
-    // template<typename T>
-    // concept forwarding_query = forwarding_query(T{});
-
 
     struct set_value_t {
         template<typename receiver_t, typename... value_ts>
@@ -52,6 +43,7 @@ namespace exec {
             return std::forward<receiver_t>(receiver).set_value(std::forward<value_ts>(values)...);
         }
     };
+    inline constexpr set_value_t set_value{};
 
     struct set_error_t {
         template<typename receiver_t, typename value_t>
@@ -59,6 +51,7 @@ namespace exec {
             return std::forward<receiver_t>(receiver).set_error(std::forward<value_t>(value));
         }
     };
+    inline constexpr set_error_t set_error{};
 
     struct set_stopped_t {
         template<typename receiver_t>
@@ -66,11 +59,7 @@ namespace exec {
             return std::forward<receiver_t>(receiver).set_stopped();
         }
     };
-
-    inline constexpr set_value_t set_value{};
-    inline constexpr set_error_t set_error{};
     inline constexpr set_stopped_t set_stopped{};
-
 
     struct get_scheduler_t {
         template<typename EnvT>
@@ -78,6 +67,7 @@ namespace exec {
             return env.query(*this);
         }
     };
+    inline constexpr get_scheduler_t get_scheduler{};
 
     struct get_delegation_scheduler_t {
         template<typename EnvT>
@@ -85,6 +75,7 @@ namespace exec {
             return env.query(*this);
         }
     };
+    inline constexpr get_delegation_scheduler_t get_delegation_scheduler{};
 
     template<typename CompletionT>
     struct get_completion_scheduler_t {
@@ -93,13 +84,10 @@ namespace exec {
             return env.query(*this);
         }
     };
-
-    //TODO: inline constexpr get_domain_t get_domain{};
-    inline constexpr get_scheduler_t get_scheduler{};
-    inline constexpr get_delegation_scheduler_t get_delegation_scheduler{};
     template<typename CompletionT>
     inline constexpr get_completion_scheduler_t<CompletionT> get_completion_scheduler{};
 
+    // TODO: struct get_domain_t{};
 
     struct empty_env {};
 
@@ -114,7 +102,6 @@ namespace exec {
             }
         }
     };
-
     inline constexpr get_env_t get_env{};
 
     template<typename QueryableT>
@@ -135,9 +122,7 @@ namespace exec {
         return { get_env(std::forward<QueryableT>(queryable)) };
     }
 
-
-    // TODO: struct default_domain;
-
+    // TODO: struct default_domain{};
 
     template<typename...>
     struct completion_signatures {};
@@ -156,7 +141,6 @@ namespace exec {
             return typename std::remove_cvref_t<SenderT>::completion_signatures{};
         }
     };
-
     inline constexpr get_completion_signatures_t get_completion_signatures{};
 
     template<typename sender_t, typename env_t = empty_env>
@@ -198,8 +182,8 @@ namespace exec {
         template<typename SignatureT, typename ReceiverT>
         concept valid_completion_for =
             requires(SignatureT* sig) {
-            []<typename CompletionT, typename... Ts>(CompletionT(*)(Ts...))
-                requires std::invocable<CompletionT, std::remove_cvref_t<ReceiverT>, Ts...> {}(sig);
+                []<typename CompletionT, typename... Ts>(CompletionT(*)(Ts...))
+                    requires std::invocable<CompletionT, std::remove_cvref_t<ReceiverT>, Ts...> {}(sig);
             };
 
         template<typename ReceiverT, typename SignatureT>
@@ -211,7 +195,6 @@ namespace exec {
 
     template<typename ReceiverT, typename CompletionSignaturesT>
     concept receiver_of = receiver<ReceiverT> && details::has_completion<ReceiverT, CompletionSignaturesT>;
-
 
     struct sender_t {};
 
@@ -230,7 +213,6 @@ namespace exec {
             return std::forward<SenderT>(sender).connect(std::forward<ReceiverT>(receiver));
         }
     };
-
     inline constexpr connect_t connect{};
 
     template<typename SenderT, typename ReceiverT>
@@ -252,7 +234,6 @@ namespace exec {
         requires(sender_t&& sndr, receiver_t&& rcvr) {
             connect(std::forward<sender_t>(sndr), std::forward<receiver_t>(rcvr));
         };
-
 
     namespace details {
         template<typename... Ts>
@@ -436,21 +417,21 @@ namespace exec {
              template<typename> typename SetErrorT = details::default_set_error_t,
              typename SetStoppedT = completion_signatures<set_stopped_t()>>
     using transform_completion_signatures = details::meta_add_t<
-            completion_signatures,
-            AdditionalSignaturesT,
-            details::gather_signatures<set_value_t,
-                                       InputSignaturesT,
-                                       SetValueT,
-                                       details::add_signatures>,
-            details::gather_signatures<set_error_t,
-                                       InputSignaturesT,
-                                       std::type_identity_t,
-                                       SetErrorT>,
-            details::gather_signatures<set_stopped_t,
-                                       InputSignaturesT,
-                                       details::stopped_wrapper<SetStoppedT>::template type,
-                                       details::add_signatures>
-    >;
+                completion_signatures,
+                AdditionalSignaturesT,
+                details::gather_signatures<set_value_t,
+                                           InputSignaturesT,
+                                           SetValueT,
+                                           details::add_signatures>,
+                details::gather_signatures<set_error_t,
+                                           InputSignaturesT,
+                                           std::type_identity_t,
+                                           SetErrorT>,
+                details::gather_signatures<set_stopped_t,
+                                           InputSignaturesT,
+                                           details::stopped_wrapper<SetStoppedT>::template type,
+                                           details::add_signatures>
+            >;
 
     template<typename SenderT,
              typename EnvT = empty_env,
@@ -463,7 +444,6 @@ namespace exec {
                                         AdditionalSignaturesT,
                                         SetValueT, SetErrorT, SetStoppedT>;
 
-
     struct scheduler_t {};
 
     struct schedule_t {
@@ -471,7 +451,6 @@ namespace exec {
             return std::forward<decltype(schd)>(schd).schedule();
         }
     };
-
     inline constexpr schedule_t schedule{};
 
     template<typename T>
@@ -485,7 +464,6 @@ namespace exec {
         } &&
         std::is_copy_constructible_v<T> &&
         std::equality_comparable<T>;
-
 
     struct operation_state_t {};
 
@@ -505,15 +483,13 @@ namespace exec {
     };
     inline constexpr start_t start{};
 
-
     // TODO: constexpr sender decltype(auto) transform_sender(...) noexcept(...) {}
     // TODO: constexpr sender decltype(auto) transform_env(...) noexcept(...) {}
     // TODO: constexpr sender decltype(auto) apply_sender(...) noexcept(...) {}
 
-
     template<typename TagT, receiver ReceiverT, typename... ValueTs>
     struct just_operation_state {
-        using operation_state_concept = exec::operation_state_t;
+        using operation_state_concept = operation_state_t;
 
         [[no_unique_address]] ReceiverT receiver;
         [[no_unique_address]] std::tuple<ValueTs...> tuple;
@@ -551,6 +527,7 @@ namespace exec {
             return { { std::forward<Ts>(values)... } };
         }
     };
+    inline constexpr just_t just{};
 
     struct just_error_t {
         template<typename T>
@@ -560,17 +537,14 @@ namespace exec {
             return { std::forward<T>(value) };
         }
     };
+    inline constexpr just_error_t just_error{};
 
     struct just_stopped_t {
         [[nodiscard]] constexpr auto operator()() const noexcept -> just_sender<set_stopped_t> {
             return {};
         }
     };
-
-    inline constexpr just_t just{};
-    inline constexpr just_error_t just_error{};
     inline constexpr just_stopped_t just_stopped{};
-
 
     namespace details {
         template<typename CreatorT, typename... MemberTs>
@@ -632,7 +606,7 @@ namespace exec {
 
     template<typename TagT, typename SenderT, typename ReceiverT, typename FnT, typename... SignatureTs>
     struct let_operation_state<TagT, SenderT, ReceiverT, FnT, completion_signatures<SignatureTs...>> {
-        using operation_state_concept = exec::operation_state_t;
+        using operation_state_concept = operation_state_t;
 
         using first_op_t = connect_result_t<SenderT, let_receiver<let_operation_state>>;
         using second_op_variant_t = details::compute_result_t<std::variant, FnT, ReceiverT, SignatureTs...>;
@@ -684,7 +658,7 @@ namespace exec {
 
     template<typename TagT, sender SenderT, typename FnT>
     struct let_sender {
-        using sender_concept = exec::sender_t;
+        using sender_concept = sender_t;
 
         SenderT sender;
         FnT fn;
@@ -750,6 +724,7 @@ namespace exec {
             };
         }
     };
+    inline constexpr let_value_t let_value{};
 
     struct let_error_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
@@ -767,6 +742,7 @@ namespace exec {
             };
         }
     };
+    inline constexpr let_error_t let_error{};
 
     struct let_stopped_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, std::invocable auto&& invocable) const noexcept ->
@@ -784,9 +760,6 @@ namespace exec {
             };
         }
     };
-
-    inline constexpr let_value_t let_value{};
-    inline constexpr let_error_t let_error{};
     inline constexpr let_stopped_t let_stopped{};
 
     struct starts_on_t {
@@ -795,7 +768,6 @@ namespace exec {
                              [s = std::forward<decltype(sender)>(sender)] { return s; });
         }
     };
-
     inline constexpr starts_on_t starts_on{};
 
     struct continues_on_t {
@@ -814,12 +786,11 @@ namespace exec {
             };
         }
     };
-
     inline constexpr continues_on_t continues_on{};
 
     template<typename TagT, receiver ReceiverT, typename FnT>
     struct then_receiver {
-        using receiver_concept = exec::receiver_t;
+        using receiver_concept = receiver_t;
 
         ReceiverT receiver;
         FnT fn;
@@ -863,7 +834,7 @@ namespace exec {
 
     template<typename TagT, sender SenderT, typename FnT>
     struct then_sender {
-        using sender_concept = exec::sender_t;
+        using sender_concept = sender_t;
 
         SenderT sender;
         FnT fn;
@@ -928,6 +899,7 @@ namespace exec {
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
+    inline constexpr then_t then{};
 
     struct upon_error_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
@@ -943,6 +915,7 @@ namespace exec {
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
+    inline constexpr upon_error_t upon_error{};
 
     struct upon_stopped_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, std::invocable auto&& invocable) const noexcept ->
@@ -958,11 +931,7 @@ namespace exec {
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
-
-    inline constexpr then_t then{};
-    inline constexpr upon_error_t upon_error{};
     inline constexpr upon_stopped_t upon_stopped{};
-
 
     class run_loop {
         struct operation_state_base {
@@ -973,7 +942,7 @@ namespace exec {
 
         template<receiver receiver_t>
         struct operation_state : operation_state_base {
-            using operation_state_concept = exec::operation_state_t;
+            using operation_state_concept = operation_state_t;
 
             explicit operation_state(run_loop* loop, receiver_t&& receiver) noexcept : loop{ loop }, receiver{ std::forward<receiver_t>(receiver) } {}
 
@@ -1118,7 +1087,6 @@ namespace exec {
         std::queue<operation_state_base*> m_queue;
     };
 
-
     namespace details {
         template<template<typename...> typename FallbackT>
         struct conditional_type_identify {
@@ -1173,7 +1141,7 @@ namespace exec {
                 state->result.emplace(std::forward<decltype(values)>(values)...);
             }
             catch (...) {
-                state->error = std::current_exception();
+                state->error.template emplace<std::exception_ptr>(std::current_exception());
             }
 
             state->loop.finish();
@@ -1181,7 +1149,12 @@ namespace exec {
 
         template<typename ValueT>
         void set_error(ValueT&& value) noexcept {
-            state->error.template emplace<std::remove_cvref_t<ValueT>>(std::forward<ValueT>(value));
+            try {
+                state->error.template emplace<std::remove_cvref_t<ValueT>>(std::forward<ValueT>(value));
+            }
+            catch (...) {
+                state->error.template emplace<std::exception_ptr>(std::current_exception());
+            }
 
             state->loop.finish();
         }
@@ -1208,7 +1181,6 @@ namespace exec {
             return std::move(state.result);
         }
     };
-
     inline constexpr sync_wait_t sync_wait{};
 }
 
