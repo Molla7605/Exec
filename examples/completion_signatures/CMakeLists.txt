@@ -1,0 +1,6 @@
+add_executable(ExecExampleCompletionSignatures)
+add_executable(Exec::Examples::CompletionSignatures ALIAS ExecExampleCompletionSignatures)
+
+target_link_libraries(ExecExampleCompletionSignatures PUBLIC Exec)
+
+target_sources(ExecExampleCompletionSignatures PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/completion_signatures.cpp)
