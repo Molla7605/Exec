@@ -32,4 +32,6 @@ int main() {
 
         std::println("Completion signatures of just_stopped() | then([]() -> float {{ return 2.5f; }}): {}", typeid(completion_signatures).name());
     }
+
+    return 0;
 }
