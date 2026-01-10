@@ -1040,7 +1040,6 @@ namespace exec {
             while (auto* task = pop_front()) {
                 task->run();
             }
-            m_cv.notify_all();
         }
 
         void finish() {
