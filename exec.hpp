@@ -4,6 +4,7 @@
 #include <atomic>
 #include <concepts>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <queue>
@@ -14,8 +15,40 @@
 #include <variant>
 
 namespace exec {
-    template<typename type>
-    concept queryable = std::destructible<type>;
+    template<typename Type>
+    concept queryable = std::destructible<Type>;
+
+    struct forwarding_query_t {
+        template<typename QueryT>
+        [[nodiscard]] consteval bool operator()(const QueryT& query) const noexcept {
+            if constexpr (requires { std::declval<QueryT>().query(std::declval<forwarding_query_t>()); }) {
+                return query.query(*this);
+            }
+
+            return std::derived_from<QueryT, forwarding_query_t>;
+        }
+    };
+    inline constexpr forwarding_query_t forwarding_query{};
+
+    template<typename QueryT>
+    concept is_forwarding_query = forwarding_query(QueryT{});
+
+    template<typename EnvT>
+    struct forwarding_env : EnvT {
+        template<typename QueryT>
+        requires is_forwarding_query<QueryT>
+        [[nodiscard]] constexpr decltype(auto) query(QueryT) const noexcept {
+            return static_cast<const EnvT&>(*this).query(QueryT{});
+        }
+    };
+
+    template<typename EnvT>
+    forwarding_env(EnvT) -> forwarding_env<EnvT>;
+
+    template<typename EnvT>
+    constexpr auto forward_env(EnvT&& env) noexcept {
+        return forwarding_env{ std::forward<EnvT>(env) };
+    }
 
     struct get_stop_token_t {
         template<typename EnvT>
@@ -29,10 +62,12 @@ namespace exec {
 
             return token;
         }
+
+        [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
+            return true;
+        }
     };
     inline constexpr get_stop_token_t get_stop_token{};
-
-    // TODO: inline constexpr forwarding_query_t forwarding_query{};
 
     template<typename T>
     using stop_token_of_t = std::remove_cvref_t<decltype(get_stop_token(std::declval<T>()))>;
@@ -107,21 +142,6 @@ namespace exec {
     template<typename QueryableT>
     using env_of_t = std::invoke_result_t<get_env_t, QueryableT>;
 
-    template<typename EnvT>
-    struct forwarding_env : EnvT {
-        template<typename QueryT>
-        [[nodiscard]] constexpr decltype(auto) query(QueryT query) const {
-            return query(static_cast<const EnvT&>(*this));
-        }
-    };
-    template<typename EnvT>
-    forwarding_env(EnvT) -> forwarding_env<EnvT>;
-
-    template <typename QueryableT>
-    constexpr auto forward_env_of(QueryableT&& queryable) -> forwarding_env<env_of_t<QueryableT>> {
-        return { get_env(std::forward<QueryableT>(queryable)) };
-    }
-
     // TODO: struct default_domain{};
 
     template<typename...>
@@ -173,7 +193,7 @@ namespace exec {
     concept receiver =
         std::derived_from<typename std::remove_cvref_t<T>::receiver_concept, receiver_t> &&
         requires(const std::remove_cvref_t<T>& rcvr) {
-        { get_env(rcvr) } -> queryable;
+            { get_env(rcvr) } -> queryable;
         } &&
         std::is_move_constructible_v<std::remove_cvref_t<T>> &&
         std::constructible_from<std::remove_cvref_t<T>, T>;
@@ -455,9 +475,9 @@ namespace exec {
         std::derived_from<typename std::remove_cvref_t<T>::scheduler_concept, scheduler_t> &&
         queryable<T> &&
         requires(T&& schd) {
-        { schedule(std::forward<T>(schd)) } -> sender;
-        { auto(get_completion_scheduler<set_value_t>(get_env(schedule(std::forward<T>(schd))))) } ->
-            std::same_as<std::remove_cvref_t<T>>;
+            { schedule(std::forward<T>(schd)) } -> sender;
+            { auto(get_completion_scheduler<set_value_t>(get_env(schedule(std::forward<T>(schd))))) } ->
+                std::same_as<std::remove_cvref_t<T>>;
         } &&
         std::is_copy_constructible_v<T> &&
         std::equality_comparable<T>;
@@ -491,12 +511,13 @@ namespace exec {
         [[no_unique_address]] ReceiverT receiver;
         [[no_unique_address]] std::tuple<ValueTs...> tuple;
 
-        constexpr void start(this auto&& self) noexcept {
+        template<typename Self>
+        constexpr void start(this Self&& self) noexcept {
             std::apply(
                 [&]<typename... Ts>(Ts&&... values) {
-                    TagT{}(std::forward_like<decltype(self)>(self.receiver), std::forward<Ts>(values)...);
+                    TagT{}(std::forward_like<Self>(self.receiver), std::forward<Ts>(values)...);
                 },
-                std::forward_like<decltype(self)>(self.tuple)
+                std::forward_like<Self>(self.tuple)
             );
         }
     };
@@ -509,10 +530,11 @@ namespace exec {
 
         [[no_unique_address]] std::tuple<ValueTs...> tuple;
 
-        [[nodiscard]] constexpr auto connect(this auto&& self, receiver auto&& rcvr) noexcept ->
-            just_operation_state<TagT, std::decay_t<decltype(rcvr)>, ValueTs...>
+        template<typename Self, receiver ReceiverT>
+        [[nodiscard]] constexpr auto connect(this Self&& self, ReceiverT&& rcvr) noexcept ->
+            just_operation_state<TagT, std::decay_t<ReceiverT>, ValueTs...>
         {
-            return { std::forward<decltype(rcvr)>(rcvr), std::forward_like<decltype(self)>(self.tuple) };
+            return { std::forward<ReceiverT>(rcvr), std::forward_like<Self>(self.tuple) };
         }
     };
 
@@ -543,19 +565,17 @@ namespace exec {
     };
     inline constexpr just_stopped_t just_stopped{};
 
-    namespace details {
-        template<typename CreatorT, typename... MemberTs>
-        struct pipe {
-            [[no_unique_address]] CreatorT creator;
-            [[no_unique_address]] std::tuple<MemberTs...> members;
+    template<typename CreatorT, typename... MemberTs>
+    struct pipe {
+        [[no_unique_address]] CreatorT creator;
+        [[no_unique_address]] std::tuple<MemberTs...> members;
 
-            [[nodiscard]] friend constexpr sender auto operator|(sender auto&& sndr, pipe&& self) noexcept {
-                return std::apply([&]<typename... Ts>(Ts&&... args) constexpr {
-                    return std::forward<decltype(self)>(self).creator(std::forward<decltype(sndr)>(sndr), std::forward<Ts>(args)...);
-                }, std::forward<decltype(self)>(self).members);
-            }
-        };
-    }
+        [[nodiscard]] friend constexpr sender auto operator|(sender auto&& sndr, pipe&& self) noexcept {
+            return std::apply([&]<typename... Ts>(Ts&&... args) constexpr {
+                return std::forward_like<decltype(self)>(self.creator(std::forward<decltype(sndr)>(sndr), std::forward<Ts>(args)...));
+            }, std::forward_like<decltype(self)>(self.members));
+        }
+    };
 
     template<typename OperationT>
     struct let_receiver {
@@ -682,15 +702,15 @@ namespace exec {
             return transform_completion_signatures_of<SenderT, EnvT, completion_signatures<>, details::default_set_value_t, details::default_set_error_t, signature_t<EnvT>>{};
         }
 
-        [[nodiscard]] constexpr auto query(get_env_t) const {
-            return forwarding_env(sender);
+        [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
+            return forward_env(get_env(sender));
         }
 
         template<receiver ReceiverT>
         [[nodiscard]] constexpr auto connect(this auto&& self, ReceiverT&& rcvr) noexcept ->
             let_operation_state<TagT,
                                 SenderT,
-                                std::remove_cvref_t<ReceiverT>,
+                                std::decay_t<ReceiverT>,
                                 FnT,
                                 typename details::select_signatures_by_tag<completion_signatures,
                                                                            TagT,
@@ -707,13 +727,13 @@ namespace exec {
 
     struct let_value_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
-            let_sender<set_value_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            let_sender<set_value_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(auto&& invocable) const noexcept {
-            return details::pipe {
+            return pipe {
                 []<typename... Ts>(Ts&&... args) constexpr {
                     return let_sender<set_value_t, Ts...>{ std::forward<Ts>(args)... };
                 },
@@ -725,13 +745,13 @@ namespace exec {
 
     struct let_error_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
-            let_sender<set_error_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            let_sender<set_error_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(auto&& invocable) const noexcept {
-            return details::pipe {
+            return pipe {
                 []<typename... Ts>(Ts&&... args) constexpr {
                     return let_sender<set_error_t, Ts...>{ std::forward<Ts>(args)... };
                 },
@@ -743,13 +763,13 @@ namespace exec {
 
     struct let_stopped_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, std::invocable auto&& invocable) const noexcept ->
-            let_sender<set_stopped_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            let_sender<set_stopped_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(std::invocable auto&& invocable) const noexcept {
-            return details::pipe {
+            return pipe {
                 []<typename... Ts>(Ts&&... args) constexpr {
                     return let_sender<set_stopped_t, Ts...>{ std::forward<Ts>(args)... };
                 },
@@ -775,7 +795,7 @@ namespace exec {
         }
 
         constexpr auto operator()(scheduler auto&& scheduler) const noexcept {
-            return details::pipe{
+            return pipe{
                 [this]<typename input_t, typename scheduler_t>(input_t&& input, scheduler_t&& schd) constexpr {
                     return this->operator()(std::forward<input_t>(input), std::forward<scheduler_t>(schd));
                 },
@@ -869,13 +889,13 @@ namespace exec {
                                                       signature<>>{};
         }
 
-        [[nodiscard]] constexpr auto query(get_env_t) const {
-            return forward_env_of(sender);
+        [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
+            return forward_env(get_env(sender));
         }
 
         [[nodiscard]] constexpr auto connect(receiver auto&& rcvr) noexcept {
             return exec::connect(std::move(sender),
-                                 then_receiver<TagT, std::remove_cvref_t<decltype(rcvr)>, FnT>{
+                                 then_receiver<TagT, std::decay_t<decltype(rcvr)>, FnT>{
                                       std::forward<decltype(rcvr)>(rcvr),
                                       std::move(fn)
                                  });
@@ -884,15 +904,15 @@ namespace exec {
 
     struct then_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
-            then_sender<set_value_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            then_sender<set_value_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(auto&& invocable) const noexcept {
-            return details::pipe{
+            return pipe{
                 []<typename... arg_ts>(arg_ts&&... args) constexpr {
-                    return then_sender<set_value_t, std::remove_cvref_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
+                    return then_sender<set_value_t, std::decay_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
@@ -900,15 +920,15 @@ namespace exec {
 
     struct upon_error_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const noexcept ->
-            then_sender<set_error_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            then_sender<set_error_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(auto&& invocable) const noexcept {
-            return details::pipe{
+            return pipe{
                 []<typename... arg_ts>(arg_ts&&... args) constexpr {
-                    return then_sender<set_error_t, std::remove_cvref_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
+                    return then_sender<set_error_t, std::decay_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
@@ -916,15 +936,15 @@ namespace exec {
 
     struct upon_stopped_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input, std::invocable auto&& invocable) const noexcept ->
-            then_sender<set_stopped_t, std::remove_cvref_t<decltype(input)>, std::remove_cvref_t<decltype(invocable)>>
+            then_sender<set_stopped_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
         {
             return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
         }
 
         [[nodiscard]] constexpr auto operator()(std::invocable auto&& invocable) const noexcept {
-            return details::pipe{
+            return pipe{
                 []<typename... arg_ts>(arg_ts&&... args) constexpr {
-                    return then_sender<set_stopped_t, std::remove_cvref_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
+                    return then_sender<set_stopped_t, std::decay_t<arg_ts>...>{ std::forward<arg_ts>(args)... };
                 }, std::make_tuple(std::forward<decltype(invocable)>(invocable)) };
         }
     };
@@ -937,14 +957,14 @@ namespace exec {
             virtual void run() = 0;
         };
 
-        template<receiver receiver_t>
+        template<receiver ReceiverT>
         struct operation_state : operation_state_base {
             using operation_state_concept = operation_state_t;
 
-            explicit operation_state(run_loop* loop, receiver_t&& receiver) noexcept : loop{ loop }, receiver{ std::forward<receiver_t>(receiver) } {}
+            explicit operation_state(run_loop* loop, ReceiverT&& receiver) noexcept : loop{ loop }, receiver{ std::forward<ReceiverT>(receiver) } {}
 
             run_loop* loop;
-            receiver_t receiver;
+            ReceiverT receiver;
 
             void run() override {
                 if (get_stop_token(get_env(receiver)).stop_requested()) {
@@ -994,7 +1014,7 @@ namespace exec {
                 }
 
                 constexpr auto connect(receiver auto&& rcvr) noexcept {
-                    return operation_state<std::remove_cvref_t<decltype(rcvr)>>(loop, std::forward<decltype(rcvr)>(rcvr));
+                    return operation_state<std::decay_t<decltype(rcvr)>>(loop, std::forward<decltype(rcvr)>(rcvr));
                 }
             };
 
@@ -1042,7 +1062,7 @@ namespace exec {
             }
         }
 
-        void finish() {
+        void finish() noexcept {
             {
                 std::scoped_lock lock(m_mutex);
                 m_finished = true;
@@ -1091,7 +1111,7 @@ namespace exec {
         };
 
         template<typename... Ts>
-        using decayed_variant = unique_template_t<std::variant, std::monostate, std::exception_ptr, std::remove_cvref_t<Ts>...>;
+        using decayed_variant = unique_template_t<std::variant, std::monostate, std::exception_ptr, std::decay_t<Ts>...>;
 
         template<typename SenderT, typename EnvT = empty_env>
         using sync_wait_error_type = error_types_of_t<SenderT, EnvT, decayed_variant>;
@@ -1146,7 +1166,7 @@ namespace exec {
         template<typename ValueT>
         void set_error(ValueT&& value) noexcept {
             try {
-                state->error.template emplace<std::remove_cvref_t<ValueT>>(std::forward<ValueT>(value));
+                state->error.template emplace<std::decay_t<ValueT>>(std::forward<ValueT>(value));
             }
             catch (...) {
                 state->error.template emplace<std::exception_ptr>(std::current_exception());
@@ -1164,7 +1184,7 @@ namespace exec {
 
     struct sync_wait_t {
         [[nodiscard]] constexpr auto operator()(sender auto&& input) const {
-            details::sync_wait_state<std::remove_cvref_t<decltype(input)>> state{};
+            details::sync_wait_state<std::decay_t<decltype(input)>> state{};
 
             auto op = exec::connect(std::forward<decltype(input)>(input), sync_wait_receiver<std::remove_cvref_t<decltype(input)>>{ &state });
             exec::start(op);
