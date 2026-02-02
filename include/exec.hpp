@@ -17,6 +17,7 @@
 #include "exec/sender.hpp"
 #include "exec/stop_token.hpp"
 #include "exec/sync_wait.hpp"
+#include "exec/starts_on.hpp"
 #include "exec/then.hpp"
 #include "exec/transform_completion_signatures.hpp"
 
