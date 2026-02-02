@@ -12,8 +12,6 @@
 #include "exec/details/decayed_tuple.hpp"
 #include "exec/details/as_tuple.hpp"
 #include "exec/details/type_list.hpp"
-#include "exec/details/unique_template.hpp"
-
 
 #include <variant>
 #include <tuple>
@@ -76,10 +74,8 @@ namespace exec {
 
         using receiver_t = ReceiverT;
 
-        using first_op_t = connect_result_t<SenderT,
-                                            details::indirect_meta_apply_t<schedule_from_receiver1, schedule_from_operation_state>>;
-        using second_op_t = connect_result_t<details::schedule_result_t<SchedulerT>,
-                                             details::indirect_meta_apply_t<schedule_from_receiver2, schedule_from_operation_state>>;
+        using first_op_t = connect_result_t<SenderT, schedule_from_receiver1<schedule_from_operation_state>>;
+        using second_op_t = connect_result_t<details::schedule_result_t<SchedulerT>, schedule_from_receiver2<schedule_from_operation_state>>;
         using state_t = std::variant<SenderT, first_op_t, second_op_t>;
 
         template<typename... Ts>

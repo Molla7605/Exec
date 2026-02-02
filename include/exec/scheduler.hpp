@@ -1,7 +1,6 @@
 #ifndef EXEC_SCHEDULER_HPP
 #define EXEC_SCHEDULER_HPP
 
-#include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
 #include "exec/sender.hpp"
 
