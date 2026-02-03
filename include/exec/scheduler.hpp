@@ -3,6 +3,7 @@
 
 #include "exec/env.hpp"
 #include "exec/sender.hpp"
+#include "exec/query.hpp"
 
 #include <concepts>
 #include <type_traits>
@@ -23,6 +24,10 @@ namespace exec {
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
             return env.query(*this);
         }
+
+        [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
+            return true;
+        }
     };
     inline constexpr get_scheduler_t get_scheduler{};
 
@@ -30,6 +35,10 @@ namespace exec {
         template<typename EnvT>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
             return env.query(*this);
+        }
+
+        [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
+            return true;
         }
     };
     inline constexpr get_delegation_scheduler_t get_delegation_scheduler{};
@@ -39,6 +48,10 @@ namespace exec {
         template<typename EnvT>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
             return env.query(*this);
+        }
+
+        [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
+            return true;
         }
     };
     template<typename TagT>
