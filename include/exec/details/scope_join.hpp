@@ -1,0 +1,8 @@
+#ifndef EXEC_DETAILS_SCOPE_JOIN_HPP
+#define EXEC_DETAILS_SCOPE_JOIN_HPP
+
+namespace exec {
+
+}
+
+#endif // !EXEC_DETAILS_SCOPE_JOIN_HPP
