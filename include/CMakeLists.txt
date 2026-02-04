@@ -20,6 +20,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_index.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_merge.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/scope_join.hpp
         ${EXEC_DETAILS_HEADER_DIR}/select_signatures_by_tag.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
@@ -32,9 +33,11 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/valid_completion_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/variant_or_empty.hpp
 
+        ${EXEC_HEADER_DIR}/associate.hpp
         ${EXEC_HEADER_DIR}/completion_signatures.hpp
         ${EXEC_HEADER_DIR}/completions.hpp
         ${EXEC_HEADER_DIR}/continues_on.hpp
+        ${EXEC_HEADER_DIR}/counting_scope.hpp
         ${EXEC_HEADER_DIR}/env.hpp
         ${EXEC_HEADER_DIR}/just.hpp
         ${EXEC_HEADER_DIR}/let.hpp
@@ -45,7 +48,11 @@ INTERFACE
         ${EXEC_HEADER_DIR}/run_loop.hpp
         ${EXEC_HEADER_DIR}/schedule_from.hpp
         ${EXEC_HEADER_DIR}/scheduler.hpp
+        ${EXEC_HEADER_DIR}/scope_token.hpp
         ${EXEC_HEADER_DIR}/sender.hpp
+        ${EXEC_HEADER_DIR}/simple_counting_scope.hpp
+        ${EXEC_HEADER_DIR}/spawn.hpp
+        ${EXEC_HEADER_DIR}/spawn_future.hpp
         ${EXEC_HEADER_DIR}/starts_on.hpp
         ${EXEC_HEADER_DIR}/stop_token.hpp
         ${EXEC_HEADER_DIR}/sync_wait.hpp
