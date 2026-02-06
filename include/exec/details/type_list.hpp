@@ -11,7 +11,7 @@ namespace exec::details {
     struct is_type_list<TypeListT<Ts...>> : std::true_type {};
 
     template<typename T>
-    concept valid_type_list = is_type_list<T>::value;
+    concept valid_type_list = is_type_list<std::remove_cvref_t<T>>::value;
 
     template<valid_type_list>
     struct list_of {};
