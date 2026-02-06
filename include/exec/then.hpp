@@ -78,9 +78,9 @@ namespace exec {
         requires std::invocable<FnT, Ts...>
         using signature_t =
             details::conditional_meta_apply_t<std::is_void_v<std::invoke_result_t<FnT, Ts...>>,
-                                              completion_signatures,
-                                              details::type_holder<set_value_t()>,
-                                              details::type_holder<set_value_t(std::invoke_result_t<FnT, Ts...>)>>;
+                                              details::default_set_value_t,
+                                              details::type_holder<>,
+                                              details::type_holder<std::invoke_result_t<FnT, Ts...>>>;
 
         template<typename EnvT>
         requires std::is_same_v<TagT, set_value_t>
