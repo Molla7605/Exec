@@ -19,12 +19,11 @@
 #include <variant>
 
 namespace exec {
-    template<typename OperationT, typename ReceiverT>
+    template<typename OpT, typename ReceiverT>
     struct let_receiver {
         using receiver_concept = receiver_t;
 
-        OperationT* op;
-        const ReceiverT& receiver;
+        OpT* op;
 
         void set_value(auto&&... values) && noexcept {
             op->template process<set_value_t>(std::forward<decltype(values)>(values)...);
@@ -38,8 +37,8 @@ namespace exec {
             op->template process<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
-            return forward_env(get_env(receiver));
+        [[nodiscard]] constexpr forward_env_of_t<ReceiverT> query(get_env_t) const noexcept {
+            return forward_env(get_env(op->receiver));
         }
     };
 
@@ -101,12 +100,19 @@ namespace exec {
         }
 
         void start() & noexcept {
-            auto& op =
-                state.template emplace<first_op_t>(
-                    exec::connect(std::get<SenderT>(state), let_receiver{ this, receiver })
-                );
+            first_op_t* op = nullptr;
+            try {
+                op = std::addressof(state.template emplace<first_op_t>(
+                                       exec::connect(std::get<SenderT>(state), let_receiver<let_operation_state, ReceiverT>{ this })
+                                    ));
+            }
+            catch (...) {
+                exec::set_error(std::move(receiver), std::current_exception());
+            }
 
-            exec::start(op);
+            if (op) {
+                exec::start(*op);
+            }
         }
     };
 
