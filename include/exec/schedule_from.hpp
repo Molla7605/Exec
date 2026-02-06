@@ -134,7 +134,9 @@ namespace exec {
                 exec::set_error(std::move(receiver), std::current_exception());
             }
 
-            exec::start(*op);
+            if (op) {
+                exec::start(*op);
+            }
         }
 
         template<typename TagT>
