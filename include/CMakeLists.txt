@@ -7,6 +7,7 @@ INTERFACE
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
         ${EXEC_DETAILS_HEADER_DIR}/as_tuple.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/default_completion_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/gather_signatures.hpp
@@ -21,6 +22,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/select_signatures_by_tag.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/sync_wait_state.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/type_holder.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_list.hpp
         ${EXEC_DETAILS_HEADER_DIR}/unique_template.hpp
         ${EXEC_DETAILS_HEADER_DIR}/valid_completion_signatures.hpp
