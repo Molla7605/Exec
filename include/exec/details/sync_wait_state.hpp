@@ -22,7 +22,7 @@ namespace exec::details {
     using sync_wait_result_type = std::optional<value_types_of_t<SenderT, EnvT, decayed_tuple, std::type_identity_t>>;
 
     struct sync_wait_error_handler_t {
-        static void operator()(const std::exception_ptr& e) {
+        static void operator()(std::exception_ptr e) {
             std::rethrow_exception(e);
         }
 
