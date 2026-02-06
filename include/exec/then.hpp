@@ -9,6 +9,9 @@
 #include "exec/sender.hpp"
 #include "exec/transform_completion_signatures.hpp"
 
+#include "exec/details/conditional_meta_apply.hpp"
+#include "exec/details/default_completion_signatures.hpp"
+
 #include <concepts>
 #include <exception>
 #include <tuple>
@@ -73,10 +76,11 @@ namespace exec {
 
         template<typename... Ts>
         requires std::invocable<FnT, Ts...>
-        using signature =
-            completion_signatures<std::conditional_t<std::is_void_v<std::invoke_result_t<FnT, Ts...>>,
-                                                     set_value_t(),
-                                                     set_value_t(std::invoke_result_t<FnT, Ts...>)>>;
+        using signature_t =
+            details::conditional_meta_apply_t<std::is_void_v<std::invoke_result_t<FnT, Ts...>>,
+                                              completion_signatures,
+                                              details::type_holder<set_value_t()>,
+                                              details::type_holder<set_value_t(std::invoke_result_t<FnT, Ts...>)>>;
 
         template<typename EnvT>
         requires std::is_same_v<TagT, set_value_t>
@@ -84,7 +88,7 @@ namespace exec {
             return transform_completion_signatures_of<SenderT,
                                                       EnvT,
                                                       completion_signatures<set_error_t(std::exception_ptr)>,
-                                                      signature>{};
+                                                      signature_t>{};
         }
 
         template<typename EnvT>
@@ -94,7 +98,7 @@ namespace exec {
                                                       EnvT,
                                                       completion_signatures<set_error_t(std::exception_ptr)>,
                                                       details::default_set_value_t,
-                                                      signature>{};
+                                                      signature_t>{};
         }
 
         template<typename EnvT>
@@ -105,7 +109,7 @@ namespace exec {
                                                       completion_signatures<set_error_t(std::exception_ptr)>,
                                                       details::default_set_value_t,
                                                       details::default_set_error_t,
-                                                      signature<>>{};
+                                                      signature_t<>>{};
         }
 
         [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
