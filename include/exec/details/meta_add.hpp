@@ -8,25 +8,16 @@ namespace exec::details {
     template<template<typename...> typename TypeListT, typename... ArgTs>
     struct meta_add<TypeListT<ArgTs...>> {
         using type = TypeListT<ArgTs...>;
-
-        template<typename... Ts>
-        using append = meta_add<type, Ts...>::type;
     };
 
     template<template<typename...> typename TypeListT, typename... LArgTs, typename... RArgTs>
     struct meta_add<TypeListT<LArgTs...>, TypeListT<RArgTs...>> {
         using type = TypeListT<LArgTs..., RArgTs...>;
-
-        template<typename... Ts>
-        using append = meta_add<type, Ts...>::type;
     };
 
     template<template<typename...> typename TypeListT, typename... LArgTs, typename... RArgTs, typename... ListTs>
     struct meta_add<TypeListT<LArgTs...>, TypeListT<RArgTs...>, ListTs...> {
         using type = meta_add<TypeListT<LArgTs..., RArgTs...>, ListTs...>::type;
-
-        template<typename... Ts>
-        using append = meta_add<type, Ts...>::type;
     };
 
     template<typename... Ts>

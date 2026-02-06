@@ -7,6 +7,7 @@
 #include "exec/details/decayed_tuple.hpp"
 #include "exec/details/default_completion_signatures.hpp"
 #include "exec/details/gather_signatures.hpp"
+#include "exec/details/meta_bind.hpp"
 #include "exec/details/meta_merge.hpp"
 #include "exec/details/valid_completion_signatures.hpp"
 #include "exec/details/variant_or_empty.hpp"
@@ -45,7 +46,7 @@ namespace exec {
                details::gather_signatures<set_value_t,
                                           InputSignaturesT,
                                           SetValueT,
-                                          details::meta_add<completion_signatures<>>::append>,
+                                          details::meta_bind_front<details::meta_add_t, completion_signatures<>>::type>,
                details::gather_signatures<set_error_t,
                                           InputSignaturesT,
                                           std::type_identity_t,
@@ -53,7 +54,7 @@ namespace exec {
                details::gather_signatures<set_stopped_t,
                                           InputSignaturesT,
                                           details::stopped_wrapper<SetStoppedT>::template type,
-                                          details::meta_add<completion_signatures<>>::append>>;
+                                          details::meta_bind_front<details::meta_add_t, completion_signatures<>>::type>>;
 
     template<sender SenderT,
              typename EnvT = empty_env,

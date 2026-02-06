@@ -1,15 +1,20 @@
 #ifndef EXEC_LET_HPP
 #define EXEC_LET_HPP
 
-#include "exec/completion_signatures.hpp"
 #include "exec/completions.hpp"
+#include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
-#include "exec/sender.hpp"
 #include "exec/operation_state.hpp"
-#include "exec/receiver.hpp"
 #include "exec/pipe_adapter.hpp"
+#include "exec/receiver.hpp"
+#include "exec/sender.hpp"
 
+#include "exec/details/meta_bind.hpp"
+
+#include <exception>
+#include <functional>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -121,8 +126,8 @@ namespace exec {
         [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
             return transform_completion_signatures_of<SenderT,
                                                       EnvT,
-                                                      completion_signatures<>,
-                                                      details::bind_env_wrapper<signature_t, EnvT>::template type>{};
+                                                      completion_signatures<set_error_t(std::exception_ptr)>,
+                                                      details::meta_bind_front<signature_t, EnvT>::template type>{};
         }
 
         template<typename EnvT>
@@ -130,9 +135,9 @@ namespace exec {
         [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
             return transform_completion_signatures_of<SenderT,
                                                       EnvT,
-                                                      completion_signatures<>,
+                                                      completion_signatures<set_error_t(std::exception_ptr)>,
                                                       details::default_set_value_t,
-                                                      details::bind_env_wrapper<signature_t, EnvT>::template type>{};
+                                                      details::meta_bind_front<signature_t, EnvT>::template type>{};
         }
 
         template<typename EnvT>
@@ -140,7 +145,7 @@ namespace exec {
         [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
             return transform_completion_signatures_of<SenderT,
                                                       EnvT,
-                                                      completion_signatures<>,
+                                                      completion_signatures<set_error_t(std::exception_ptr)>,
                                                       details::default_set_value_t,
                                                       details::default_set_error_t,
                                                       signature_t<EnvT>>{};

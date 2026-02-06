@@ -1,7 +1,7 @@
 #ifndef EXEC_DETAILS_UNIQUE_TEMPLATE_HPP
 #define EXEC_DETAILS_UNIQUE_TEMPLATE_HPP
 
-#include "exec/details/meta_bind.hpp"
+#include "exec/details/meta_append.hpp"
 #include "exec/details/meta_reverse.hpp"
 
 #include <type_traits>
@@ -22,7 +22,7 @@ namespace exec::details {
 
     template<typename ListT, typename CurrentT>
     struct unique_template<ListT, _unique_template::candidates<CurrentT>> {
-        using type = meta_bind_front_t<ListT, CurrentT>;
+        using type = meta_append_front_t<ListT, CurrentT>;
     };
 
     template<typename ListT, typename... CandidateTs, typename CurrentT>
@@ -33,7 +33,7 @@ namespace exec::details {
 
     template<typename ListT, typename... CandidateTs, typename CurrentT>
     struct unique_template<ListT, _unique_template::candidates<CurrentT, CandidateTs...>> {
-        using type = unique_template<meta_bind_front_t<ListT, CurrentT>, _unique_template::candidates<CandidateTs...>>::type;
+        using type = unique_template<meta_append_front_t<ListT, CurrentT>, _unique_template::candidates<CandidateTs...>>::type;
     };
 
     template<template<typename...> typename TypeListT, typename... CandidateTs>

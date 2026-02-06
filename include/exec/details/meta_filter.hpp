@@ -1,7 +1,7 @@
 #ifndef EXEC_DETAILS_META_FILTER_HPP
 #define EXEC_DETAILS_META_FILTER_HPP
 
-#include "exec/details/meta_bind.hpp"
+#include "exec/details/meta_append.hpp"
 #include "exec/details/type_list.hpp"
 
 #include <type_traits>
@@ -23,7 +23,7 @@ namespace exec::details {
     template<template<typename...> typename FilterT, typename Target, typename ListT, typename CurrentT, typename... CandidateTs>
     requires FilterT<Target, CurrentT>::value
     struct meta_filter<FilterT, Target, ListT, _meta_filter::candidates<CurrentT, CandidateTs...>> {
-        using type = meta_filter<FilterT, Target, meta_bind_back_t<ListT, CurrentT>, _meta_filter::candidates<CandidateTs...>>::type;
+        using type = meta_filter<FilterT, Target, meta_append_back_t<ListT, CurrentT>, _meta_filter::candidates<CandidateTs...>>::type;
     };
 
     template<template<typename...> typename FilterT, typename Target, typename ListT, typename CurrentT, typename... CandidateTs>

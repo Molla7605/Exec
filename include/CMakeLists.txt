@@ -12,6 +12,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/gather_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/indirect_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_add.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/meta_append.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_bind.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_filter.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_index.hpp
