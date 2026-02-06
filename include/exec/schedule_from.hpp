@@ -126,7 +126,15 @@ namespace exec {
                 return;
             }
 
-            exec::start(state.template emplace<second_op_t>(exec::connect(exec::schedule(scheduler), schedule_from_receiver2{ this })));
+            second_op_t* op = nullptr;
+            try {
+                op = std::addressof(state.template emplace<second_op_t>(exec::connect(exec::schedule(scheduler), schedule_from_receiver2{ this })));
+            }
+            catch (...) {
+                exec::set_error(std::move(receiver), std::current_exception());
+            }
+
+            exec::start(*op);
         }
 
         template<typename TagT>
@@ -135,9 +143,17 @@ namespace exec {
         }
 
         void start() & noexcept {
-            auto& op = state.template emplace<first_op_t>(exec::connect(std::get<SenderT>(state), schedule_from_receiver1{ this }));
+            first_op_t* op = nullptr;
+            try {
+                op = std::addressof(state.template emplace<first_op_t>(exec::connect(std::get<SenderT>(state), schedule_from_receiver1{ this })));
+            }
+            catch (...) {
+                exec::set_error(std::move(receiver), std::current_exception());
+            }
 
-            exec::start(op);
+            if (op) {
+                exec::start(*op);
+            }
         }
     };
 
