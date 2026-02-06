@@ -33,6 +33,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/valid_completion_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/variant_or_empty.hpp
 
+        ${EXEC_HEADER_DIR}/allocator.hpp
         ${EXEC_HEADER_DIR}/associate.hpp
         ${EXEC_HEADER_DIR}/completion_signatures.hpp
         ${EXEC_HEADER_DIR}/completions.hpp
