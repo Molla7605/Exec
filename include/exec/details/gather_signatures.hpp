@@ -10,7 +10,7 @@
 
 namespace exec::details {
     template<template<typename...> typename TupleT, template<typename...> typename VariantT>
-    struct transform_signatures {
+    struct apply_signatures {
         template<typename... Ts>
         using apply = indirect_meta_apply_t<VariantT, typename signature_args_of<completion_signatures<Ts>>::template indirect_apply<TupleT>...>;
     };
@@ -21,7 +21,7 @@ namespace exec::details {
              template<typename...> typename VariantT>
     using gather_signatures =
             elements_of<select_signatures_by_tag_t<TagT, SignatureT>>::template apply<
-                transform_signatures<TupleT, VariantT>::template apply
+                apply_signatures<TupleT, VariantT>::template apply
             >;
 }
 

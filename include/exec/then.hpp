@@ -21,7 +21,7 @@
 namespace exec {
     template<typename TagT, receiver ReceiverT, typename FnT>
     struct then_receiver {
-        using receiver_concept = receiver_t;
+        using receiver_concept = exec::receiver_t;
 
         ReceiverT receiver;
         FnT fn;
@@ -69,7 +69,7 @@ namespace exec {
 
     template<typename TagT, sender SenderT, typename FnT>
     struct then_sender {
-        using sender_concept = sender_t;
+        using sender_concept = exec::sender_t;
 
         SenderT sender;
         FnT fn;

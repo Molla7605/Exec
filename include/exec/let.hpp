@@ -21,7 +21,7 @@
 namespace exec {
     template<typename OpT, typename ReceiverT>
     struct let_receiver {
-        using receiver_concept = receiver_t;
+        using receiver_concept = exec::receiver_t;
 
         OpT* op;
 
@@ -42,22 +42,14 @@ namespace exec {
         }
     };
 
-    namespace details {
-        template<template<typename...> typename TypeListT, typename EnvT>
-        struct bind_env_wrapper {
-            template<typename... Ts>
-            using type = TypeListT<EnvT, Ts...>;
-        };
-    }
-
     template<typename TagT, typename SenderT, typename ReceiverT, typename FnT>
     struct let_operation_state {
-        using operation_state_concept = operation_state_t;
+        using operation_state_concept = exec::operation_state_t;
 
         template<typename... Ts>
-        using op_result_t = std::decay_t<connect_result_t<std::invoke_result_t<FnT, Ts...>, ReceiverT>>;
+        using op_result_t = std::remove_cvref_t<connect_result_t<std::invoke_result_t<FnT, Ts...>, ReceiverT>>;
 
-        using first_op_t = std::decay_t<connect_result_t<SenderT, let_receiver<let_operation_state, ReceiverT>>>;
+        using first_op_t = std::remove_cvref_t<connect_result_t<SenderT, let_receiver<let_operation_state, ReceiverT>>>;
         using second_op_variant_t = value_types_of_t<SenderT, env_of_t<ReceiverT>, op_result_t, std::variant>;
 
         using state_t = details::meta_add_t<std::variant<SenderT, first_op_t>, second_op_variant_t>;
@@ -118,7 +110,7 @@ namespace exec {
 
     template<typename TagT, typename SenderT, typename FnT>
     struct let_sender {
-        using sender_concept = sender_t;
+        using sender_concept = exec::sender_t;
 
         SenderT sender;
         FnT fn;
