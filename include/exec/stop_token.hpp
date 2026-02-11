@@ -280,16 +280,16 @@ namespace exec {
     template<typename CallbackT>
     inplace_stop_callback(inplace_stop_token, CallbackT) -> inplace_stop_callback<CallbackT>;
 
-    class naver_stop_token {
+    class never_stop_token {
         struct callback {
-            explicit callback(naver_stop_token, auto&&) noexcept {}
+            explicit callback(never_stop_token, auto&&) noexcept {}
         };
 
     public:
         template<typename CallbackT>
         using callback_type = callback;
 
-        [[nodiscard]] bool operator==(const naver_stop_token&) const = default;
+        [[nodiscard]] bool operator==(const never_stop_token&) const = default;
 
         [[nodiscard]] static constexpr bool stop_requested() noexcept { return false; }
 
@@ -305,8 +305,8 @@ namespace exec {
         }
 
         template<typename EnvT>
-        [[nodiscard]] constexpr const naver_stop_token& operator()(const EnvT&) const noexcept {
-            static naver_stop_token token{};
+        [[nodiscard]] constexpr unstoppable_token decltype(auto) operator()(const EnvT&) const noexcept {
+            static never_stop_token token{};
 
             return token;
         }
