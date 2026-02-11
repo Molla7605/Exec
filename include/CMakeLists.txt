@@ -7,6 +7,7 @@ INTERFACE
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
         ${EXEC_DETAILS_HEADER_DIR}/as_tuple.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/base_stop_callback.hpp
         ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/default_completion_signatures.hpp
@@ -21,6 +22,9 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
         ${EXEC_DETAILS_HEADER_DIR}/select_signatures_by_tag.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/stoppable_callback_for.hpp
         ${EXEC_DETAILS_HEADER_DIR}/sync_wait_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_holder.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_list.hpp
