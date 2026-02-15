@@ -27,7 +27,7 @@ namespace exec::details {
 
     template<typename SizeT, SizeT TARGET_INDEX, SizeT INDEX, typename CurrentT, typename... CandidateTs>
     struct meta_index<_meta_index::index<SizeT, TARGET_INDEX>, _meta_index::index<SizeT, INDEX>, CurrentT, CandidateTs...> {
-        using type = meta_index<_meta_index::index<SizeT, TARGET_INDEX>, _meta_index::index<SizeT, ++INDEX>, CandidateTs...>::type;
+        using type = meta_index<_meta_index::index<SizeT, TARGET_INDEX>, _meta_index::index<SizeT, INDEX + 1>, CandidateTs...>::type;
     };
 
     template<template<typename...> typename TypeListT, typename... ElementTs, typename SizeT, SizeT TARGET_INDEX>
