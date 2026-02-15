@@ -48,7 +48,7 @@ namespace exec {
             state->loop.finish();
         }
 
-        [[nodiscard]] constexpr details::sync_wait_env query(get_env_t) const noexcept {
+        [[nodiscard]] constexpr details::sync_wait_env get_env() const noexcept {
             return { &state->loop };
         }
     };

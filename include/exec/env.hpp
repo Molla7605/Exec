@@ -12,8 +12,8 @@ namespace exec {
     struct get_env_t {
         template<queryable QueryableT>
         [[nodiscard]] constexpr decltype(auto) operator()(const QueryableT& queryable) const noexcept {
-            if constexpr (requires { queryable.query(*this); }) {
-                return queryable.query(*this);
+            if constexpr (requires { queryable.get_env(); }) {
+                return queryable.get_env();
             }
             else {
                 return empty_env{};

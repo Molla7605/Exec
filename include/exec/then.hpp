@@ -38,7 +38,7 @@ namespace exec {
             process<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
+        [[nodiscard]] constexpr decltype(auto) get_env() const noexcept {
             return details::forward_env(exec::get_env(receiver));
         }
 
@@ -112,7 +112,7 @@ namespace exec {
                                                       signature_t<>>{};
         }
 
-        [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
+        [[nodiscard]] constexpr decltype(auto) get_env() const noexcept {
             return details::forward_env(exec::get_env(sender));
         }
 

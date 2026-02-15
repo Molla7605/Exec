@@ -41,7 +41,7 @@ namespace exec {
             op->template transfer_context<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
+        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> get_env() const noexcept {
             return details::forward_env(exec::get_env(op->receiver));
         }
     };
@@ -65,7 +65,7 @@ namespace exec {
             op->template passthrough<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
+        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> get_env() const noexcept {
             return details::forward_env(exec::get_env(op->receiver));
         }
     };

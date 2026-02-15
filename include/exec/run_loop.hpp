@@ -80,7 +80,7 @@ namespace exec {
 
                 run_loop* loop;
 
-                [[nodiscard]] auto query(get_env_t) const noexcept {
+                [[nodiscard]] auto get_env() const noexcept {
                     return env{ loop };
                 }
 
