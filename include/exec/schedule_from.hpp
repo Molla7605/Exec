@@ -9,6 +9,7 @@
 #include "exec/sender.hpp"
 #include "exec/transform_completion_signatures.hpp"
 
+#include "details/forward_env.hpp"
 #include "exec/details/as_tuple.hpp"
 #include "exec/details/decayed_tuple.hpp"
 #include "exec/details/type_list.hpp"
@@ -40,8 +41,8 @@ namespace exec {
             op->template transfer_context<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
-            return forward_env(get_env(op->receiver));
+        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
+            return details::forward_env(exec::get_env(op->receiver));
         }
     };
 
@@ -64,8 +65,8 @@ namespace exec {
             op->template passthrough<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
-            return forward_env(get_env(op->receiver));
+        [[nodiscard]] constexpr details::forward_env_of_t<typename OpT::receiver_t> query(get_env_t) const noexcept {
+            return details::forward_env(exec::get_env(op->receiver));
         }
     };
 

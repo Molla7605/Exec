@@ -1,13 +1,10 @@
-#ifndef EXEC_QUERY_HPP
-#define EXEC_QUERY_HPP
+#ifndef EXEC_FORWARDING_QUERY_HPP
+#define EXEC_FORWARDING_QUERY_HPP
 
 #include <concepts>
 #include <type_traits>
 
 namespace exec {
-    template<typename Type>
-    concept queryable = std::destructible<Type>;
-
     struct forwarding_query_t {
         template<typename QueryT>
         [[nodiscard]] consteval bool operator()(const QueryT& query) const noexcept {
@@ -21,4 +18,4 @@ namespace exec {
     inline constexpr forwarding_query_t forwarding_query{};
 }
 
-#endif // !EXEC_QUERY_HPP
+#endif // !EXEC_FORWARDING_QUERY_HPP

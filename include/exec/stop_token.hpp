@@ -1,7 +1,7 @@
 #ifndef EXEC_STOP_TOKEN_HPP
 #define EXEC_STOP_TOKEN_HPP
 
-#include "exec/query.hpp"
+#include "exec/forwarding_query.hpp"
 
 #include "exec/details/base_stop_callback.hpp"
 #include "exec/details/stop_state.hpp"

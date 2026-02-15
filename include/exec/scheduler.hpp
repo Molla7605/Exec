@@ -2,8 +2,9 @@
 #define EXEC_SCHEDULER_HPP
 
 #include "exec/env.hpp"
+#include "exec/forwarding_query.hpp"
+#include "exec/queryable.hpp"
 #include "exec/sender.hpp"
-#include "exec/query.hpp"
 
 #include <concepts>
 #include <type_traits>

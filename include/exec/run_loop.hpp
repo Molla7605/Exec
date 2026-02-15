@@ -2,17 +2,17 @@
 #define EXEC_RUN_LOOP_HPP
 
 #include "exec/completions.hpp"
-#include "exec/env.hpp"
-#include "exec/receiver.hpp"
-#include "exec/sender.hpp"
 #include "exec/completion_signatures.hpp"
+#include "exec/env.hpp"
 #include "exec/operation_state.hpp"
+#include "exec/receiver.hpp"
 #include "exec/scheduler.hpp"
+#include "exec/sender.hpp"
 #include "exec/stop_token.hpp"
 
 #include <atomic>
-#include <exception>
 #include <condition_variable>
+#include <exception>
 #include <mutex>
 #include <queue>
 #include <utility>
@@ -37,7 +37,7 @@ namespace exec {
             ReceiverT receiver;
 
             void run() noexcept override {
-                if (get_stop_token(get_env(receiver)).stop_requested()) {
+                if (get_stop_token(exec::get_env(receiver)).stop_requested()) {
                     set_stopped(std::move(receiver));
                 }
                 else {

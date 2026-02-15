@@ -3,7 +3,7 @@
 
 #include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
-#include "exec/query.hpp"
+#include "exec/queryable.hpp"
 #include "exec/receiver.hpp"
 
 #include "exec/details/valid_completion_signatures.hpp"

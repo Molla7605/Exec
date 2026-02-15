@@ -3,12 +3,12 @@
 
 #include "exec/completions.hpp"
 #include "exec/completion_signatures.hpp"
-#include "exec/env.hpp"
 #include "exec/pipe_adapter.hpp"
 #include "exec/receiver.hpp"
 #include "exec/sender.hpp"
 #include "exec/transform_completion_signatures.hpp"
 
+#include "details/forward_env.hpp"
 #include "exec/details/conditional_meta_apply.hpp"
 #include "exec/details/default_completion_signatures.hpp"
 
@@ -39,7 +39,7 @@ namespace exec {
         }
 
         [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
-            return forward_env(get_env(receiver));
+            return details::forward_env(exec::get_env(receiver));
         }
 
     private:
@@ -113,7 +113,7 @@ namespace exec {
         }
 
         [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
-            return forward_env(get_env(sender));
+            return details::forward_env(exec::get_env(sender));
         }
 
         [[nodiscard]] constexpr auto connect(this auto&& self, receiver auto&& rcvr) {

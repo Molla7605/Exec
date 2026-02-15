@@ -9,6 +9,7 @@
 #include "exec/receiver.hpp"
 #include "exec/sender.hpp"
 
+#include "details/forward_env.hpp"
 #include "exec/details/meta_bind.hpp"
 
 #include <exception>
@@ -37,8 +38,8 @@ namespace exec {
             op->template process<set_stopped_t>();
         }
 
-        [[nodiscard]] constexpr forward_env_of_t<ReceiverT> query(get_env_t) const noexcept {
-            return forward_env(get_env(op->receiver));
+        [[nodiscard]] constexpr details::forward_env_of_t<ReceiverT> query(get_env_t) const noexcept {
+            return details::forward_env(exec::get_env(op->receiver));
         }
     };
 
@@ -150,7 +151,7 @@ namespace exec {
         }
 
         [[nodiscard]] constexpr decltype(auto) query(get_env_t) const noexcept {
-            return forward_env(get_env(sender));
+            return details::forward_env(exec::get_env(sender));
         }
 
         template<typename Self, receiver ReceiverT>
