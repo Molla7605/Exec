@@ -3,6 +3,7 @@
 
 #include "exec/details/meta_index.hpp"
 
+#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -17,22 +18,24 @@ namespace exec::details {
 
     template<std::size_t... INDICES, typename... Ts>
     struct product_type_impl<std::index_sequence<INDICES...>, Ts...> : product_type_impl<std::integral_constant<std::size_t, INDICES>, Ts>... {
+        template<size_t INDEX>
+        using child_t = product_type_impl<std::integral_constant<std::size_t, INDEX>, meta_index_t<INDEX, Ts...>>;
+
         template<std::size_t INDEX, typename Self>
         requires (INDEX < sizeof...(Ts))
         [[nodiscard]] constexpr decltype(auto) get(this Self&& self) noexcept {
             return std::forward_like<Self>(
-                self.template product_type_impl<std::integral_constant<std::size_t, INDEX>, meta_index_t<INDEX, Ts...>>::value
+                self.child_t<INDEX>::value
             );
         }
 
         template<typename InvocableT, typename Self>
-        requires std::invocable<InvocableT, Ts...>
         [[nodiscard]] constexpr decltype(auto) apply(this Self&& self, InvocableT&& invocable)
-            noexcept(std::is_nothrow_invocable_v<InvocableT, Ts...>)
+            noexcept(std::is_nothrow_invocable_v<InvocableT, decltype(std::forward_like<Self>(std::declval<Ts>()))...>)
         {
             return std::invoke(
                 std::forward<InvocableT>(invocable),
-                std::forward_like<Self>(self.template product_type_impl<std::integral_constant<std::size_t, INDICES>, Ts>::value)...
+                std::forward_like<Self>(self.child_t<INDICES>::value)...
             );
         }
     };
