@@ -8,10 +8,12 @@ INTERFACE
     FILES
         ${EXEC_DETAILS_HEADER_DIR}/as_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/base_stop_callback.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/basic_closure.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_sender.hpp
         ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/default_completion_signatures.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/forward_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/gather_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/indirect_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_add.hpp
@@ -20,7 +22,9 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_filter.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_index.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_merge.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/meta_not.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/pipe.hpp
         ${EXEC_DETAILS_HEADER_DIR}/select_signatures_by_tag.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
