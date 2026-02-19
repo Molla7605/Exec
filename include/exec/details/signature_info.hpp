@@ -3,6 +3,7 @@
 
 #include "exec/completion_signatures.hpp"
 
+#include "exec/details/valid_completion_signatures.hpp"
 #include "exec/details/indirect_meta_apply.hpp"
 
 namespace exec::details {
