@@ -3,14 +3,20 @@
 
 #include "exec/completions.hpp"
 #include "exec/completion_signatures.hpp"
-#include "exec/pipe_adapter.hpp"
-#include "exec/receiver.hpp"
 #include "exec/sender.hpp"
-#include "exec/transform_completion_signatures.hpp"
 
-#include "details/forward_env.hpp"
+#include "exec/details/basic_closure.hpp"
+#include "exec/details/basic_sender.hpp"
 #include "exec/details/conditional_meta_apply.hpp"
-#include "exec/details/default_completion_signatures.hpp"
+#include "exec/details/gather_signatures.hpp"
+#include "exec/details/meta_add.hpp"
+#include "exec/details/meta_bind.hpp"
+#include "exec/details/meta_filter.hpp"
+#include "exec/details/meta_index.hpp"
+#include "exec/details/meta_merge.hpp"
+#include "exec/details/meta_not.hpp"
+#include "exec/details/type_holder.hpp"
+#include "exec/details/unique_template.hpp"
 
 #include <concepts>
 #include <exception>
@@ -19,161 +25,143 @@
 #include <utility>
 
 namespace exec {
-    template<typename TagT, receiver ReceiverT, typename FnT>
-    struct then_receiver {
-        using receiver_concept = exec::receiver_t;
+    template<typename CompletionT>
+    struct then_tag_t {};
 
-        ReceiverT receiver;
-        FnT fn;
+    template<typename CompletionT>
+    struct details::impls_for<then_tag_t<CompletionT>> : default_impls {
+        template<typename... Args>
+        using set_value_signature_t = exec::set_value_t(Args...);
 
-        void set_value(auto&&... values) && noexcept {
-            process<set_value_t>(std::forward<decltype(values)>(values)...);
-        }
+        template<typename InvocableT, typename... ArgTs>
+        using signature_t = conditional_meta_apply_t<std::is_void_v<std::invoke_result_t<InvocableT, ArgTs...>>,
+                                                     set_value_signature_t,
+                                                     type_holder<>,
+                                                     type_holder<std::invoke_result_t<InvocableT, ArgTs...>>>;
 
-        void set_error(auto&& value) && noexcept {
-            process<set_error_t>(std::forward<decltype(value)>(value));
-        }
+        template<typename InvocableT, typename... ArgTs>
+        using is_nothrow_t = std::bool_constant<std::is_nothrow_invocable_v<InvocableT, ArgTs...>>;
 
-        void set_stopped() && noexcept {
-            process<set_stopped_t>();
-        }
-
-        [[nodiscard]] constexpr decltype(auto) get_env() const noexcept {
-            return details::forward_env(exec::get_env(receiver));
-        }
-
-    private:
-        template<typename T>
-        requires std::is_same_v<TagT, T>
-        void process(this auto&& self, auto&&... values) noexcept {
+        template<typename InvocableT, typename ReceiverT, typename... ArgTs>
+        static constexpr void try_complete(InvocableT&& invocable, ReceiverT& receiver, ArgTs&&... args) noexcept {
+            constexpr bool nothrow = std::is_nothrow_invocable_v<InvocableT, ArgTs...>;
             try {
-                if constexpr (std::is_void_v<std::invoke_result_t<FnT, decltype(values)...>>) {
-                    std::invoke(std::forward_like<decltype(self)>(self.fn), std::forward<decltype(values)>(values)...);
-                    exec::set_value(std::move(self.receiver));
+                if constexpr (std::is_void_v<std::invoke_result_t<InvocableT, ArgTs...>>) {
+                    std::invoke(std::forward<InvocableT>(invocable), std::forward<ArgTs>(args)...);
+                    exec::set_value(std::move(receiver));
                 }
                 else {
-                    exec::set_value(std::move(self.receiver),
-                                    std::invoke(std::forward_like<decltype(self)>(self.fn), std::forward<decltype(values)>(values)...));
+                    exec::set_value(std::move(receiver),
+                                    std::invoke(std::forward<InvocableT>(invocable), std::forward<ArgTs>(args)...));
                 }
             }
             catch (...) {
-                exec::set_error(std::move(self.receiver), std::current_exception());
+                if constexpr (!nothrow) {
+                    exec::set_error(std::move(receiver), std::current_exception());
+                }
             }
         }
 
-        template<typename T>
-        void process(this auto&& self, auto&&... values) noexcept {
-            T{}(std::move(self.receiver), std::forward<decltype(values)>(values)...);
-        }
+        static constexpr auto get_completion_signatures = []<typename SenderT, typename EnvT>(SenderT&& sender, EnvT&&) noexcept {
+            return std::forward<SenderT>(sender).apply(
+                    []<typename InvocableT, typename... ChildTs>(auto, InvocableT&&, ChildTs&&...) noexcept {
+                        using child_completion_signatures_t = completion_signatures_of_t<meta_index_t<0, ChildTs...>, EnvT>;
+                        using bool_constants_t =
+                            meta_unique_t<gather_signatures<CompletionT,
+                                                            child_completion_signatures_t,
+                                                            meta_bind_front<is_nothrow_t, InvocableT>::template type,
+                                                            std::tuple>>;
+
+                        constexpr bool nothrow = std::apply([](auto... bool_constants) noexcept {
+                            return (bool_constants.value && ... && true);
+                        }, bool_constants_t{});
+
+                        using transformed =
+                            meta_add_t<
+                                    gather_signatures<CompletionT,
+                                                      child_completion_signatures_t,
+                                                      meta_bind_front<signature_t, InvocableT>::template type,
+                                                      completion_signatures>,
+                                    meta_filter_t<CompletionT,
+                                                  child_completion_signatures_t,
+                                                  meta_not<has_same_tag>::type>
+                                >;
+
+                        if constexpr (nothrow) {
+                            return meta_unique_t<transformed>{};
+                        }
+                        else {
+                            return meta_merge_t<transformed,
+                                                completion_signatures<exec::set_error_t(std::exception_ptr)>>{};
+                        }
+                    });
+        };
+
+        static constexpr auto complete =
+            []<typename InvocableT, typename ReceiverT, typename TagT, typename... ArgTs>
+                (auto, InvocableT&& invocable, ReceiverT& receiver, TagT, ArgTs&&... args) noexcept -> void
+            {
+                if constexpr (std::is_same_v<CompletionT, TagT>) {
+                    try_complete(std::forward<InvocableT>(invocable), receiver, std::forward<ArgTs>(args)...);
+                }
+                else {
+                    TagT{}(std::move(receiver), std::forward<ArgTs>(args)...);
+                }
+            };
     };
 
-    template<typename TagT, sender SenderT, typename FnT>
-    struct then_sender {
-        using sender_concept = exec::sender_t;
-
-        SenderT sender;
-        FnT fn;
-
-        template<typename... Ts>
-        requires std::invocable<FnT, Ts...>
-        using signature_t =
-            details::conditional_meta_apply_t<std::is_void_v<std::invoke_result_t<FnT, Ts...>>,
-                                              details::default_set_value_t,
-                                              details::type_holder<>,
-                                              details::type_holder<std::invoke_result_t<FnT, Ts...>>>;
-
-        template<typename EnvT>
-        requires std::is_same_v<TagT, set_value_t>
-        [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
-            return transform_completion_signatures_of<SenderT,
-                                                      EnvT,
-                                                      completion_signatures<set_error_t(std::exception_ptr)>,
-                                                      signature_t>{};
+    template<>
+    struct then_tag_t<exec::set_value_t> {
+        template<sender SenderT, typename InvocableT>
+        [[nodiscard]] constexpr auto operator()(SenderT input, InvocableT&& invocable) const {
+            return details::make_sender(*this, std::forward<InvocableT>(invocable), std::forward<SenderT>(input));
         }
 
-        template<typename EnvT>
-        requires std::is_same_v<TagT, set_error_t>
-        [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
-            return transform_completion_signatures_of<SenderT,
-                                                      EnvT,
-                                                      completion_signatures<set_error_t(std::exception_ptr)>,
-                                                      details::default_set_value_t,
-                                                      signature_t>{};
-        }
-
-        template<typename EnvT>
-        requires std::is_same_v<TagT, set_stopped_t>
-        [[nodiscard]] constexpr auto get_completion_signatures(const EnvT&) const noexcept {
-            return transform_completion_signatures_of<SenderT,
-                                                      EnvT,
-                                                      completion_signatures<set_error_t(std::exception_ptr)>,
-                                                      details::default_set_value_t,
-                                                      details::default_set_error_t,
-                                                      signature_t<>>{};
-        }
-
-        [[nodiscard]] constexpr decltype(auto) get_env() const noexcept {
-            return details::forward_env(exec::get_env(sender));
-        }
-
-        [[nodiscard]] constexpr auto connect(this auto&& self, receiver auto&& rcvr) {
-            return exec::connect(std::forward_like<decltype(self)>(self.sender),
-                                 then_receiver<TagT, std::decay_t<decltype(rcvr)>, FnT>{
-                                      std::forward<decltype(rcvr)>(rcvr),
-                                      std::forward_like<decltype(self)>(self.fn)
-                                 });
-        }
-    };
-
-    struct then_t {
-        [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const ->
-            then_sender<set_value_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
-        {
-            return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
-        }
-
-        [[nodiscard]] constexpr auto operator()(auto&& invocable) const {
-            return pipe_adapter {
-                []<typename... Ts>(Ts&&... args) constexpr {
-                    return then_sender<set_value_t, std::decay_t<Ts>...>{ std::forward<Ts>(args)... };
-                }, std::make_tuple(std::forward<decltype(invocable)>(invocable))
+        template<typename InvocableT>
+        [[nodiscard]] constexpr auto operator()(InvocableT&& invocable) const {
+            return details::basic_closure{
+                sender_adapter_closure<then_tag_t>{},
+                details::product_type{ std::forward<InvocableT>(invocable) }
             };
         }
     };
+    using then_t = then_tag_t<exec::set_value_t>;
     inline constexpr then_t then{};
 
-    struct upon_error_t {
-        [[nodiscard]] constexpr auto operator()(sender auto&& input, auto&& invocable) const ->
-            then_sender<set_error_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
-        {
-            return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
+    template<>
+    struct then_tag_t<exec::set_error_t> {
+        template<sender SenderT, typename InvocableT>
+        [[nodiscard]] constexpr auto operator()(SenderT input, InvocableT&& invocable) const {
+            return details::make_sender(*this, std::forward<InvocableT>(invocable), std::forward<SenderT>(input));
         }
 
-        [[nodiscard]] constexpr auto operator()(auto&& invocable) const {
-            return pipe_adapter {
-                []<typename... Ts>(Ts&&... args) constexpr {
-                    return then_sender<set_error_t, std::decay_t<Ts>...>{ std::forward<Ts>(args)... };
-                }, std::make_tuple(std::forward<decltype(invocable)>(invocable))
+        template<typename InvocableT>
+        [[nodiscard]] constexpr auto operator()(InvocableT&& invocable) const {
+            return details::basic_closure{
+                sender_adapter_closure<then_tag_t>{},
+                details::product_type{ std::forward<InvocableT>(invocable) }
             };
         }
     };
+    using upon_error_t = then_tag_t<exec::set_error_t>;
     inline constexpr upon_error_t upon_error{};
 
-    struct upon_stopped_t {
-        [[nodiscard]] constexpr auto operator()(sender auto&& input, std::invocable auto&& invocable) const ->
-            then_sender<set_stopped_t, std::decay_t<decltype(input)>, std::decay_t<decltype(invocable)>>
-        {
-            return { std::forward<decltype(input)>(input), std::forward<decltype(invocable)>(invocable) };
+    template<>
+    struct then_tag_t<exec::set_stopped_t> {
+        template<sender SenderT, std::invocable InvocableT>
+        [[nodiscard]] constexpr auto operator()(SenderT input, InvocableT&& invocable) const {
+            return details::make_sender(*this, std::forward<InvocableT>(invocable), std::forward<SenderT>(input));
         }
 
-        [[nodiscard]] constexpr auto operator()(std::invocable auto&& invocable) const {
-            return pipe_adapter {
-                []<typename... Ts>(Ts&&... args) constexpr {
-                    return then_sender<set_stopped_t, std::decay_t<Ts>...>{ std::forward<Ts>(args)... };
-                }, std::make_tuple(std::forward<decltype(invocable)>(invocable))
+        template<typename InvocableT>
+        [[nodiscard]] constexpr auto operator()(InvocableT&& invocable) const {
+            return details::basic_closure{
+                sender_adapter_closure<then_tag_t>{},
+                details::product_type{ std::forward<InvocableT>(invocable) }
             };
         }
     };
+    using upon_stopped_t = then_tag_t<exec::set_stopped_t>;
     inline constexpr upon_stopped_t upon_stopped{};
 }
 
