@@ -40,13 +40,13 @@ INTERFACE
         ${EXEC_HEADER_DIR}/just.hpp
         ${EXEC_HEADER_DIR}/let.hpp
         ${EXEC_HEADER_DIR}/operation_state.hpp
-        ${EXEC_HEADER_DIR}/pipe_adapter.hpp
         ${EXEC_HEADER_DIR}/query.hpp
         ${EXEC_HEADER_DIR}/receiver.hpp
         ${EXEC_HEADER_DIR}/run_loop.hpp
         ${EXEC_HEADER_DIR}/schedule_from.hpp
         ${EXEC_HEADER_DIR}/scheduler.hpp
         ${EXEC_HEADER_DIR}/sender.hpp
+        ${EXEC_HEADER_DIR}/sender_adapter_closure.hpp
         ${EXEC_HEADER_DIR}/starts_on.hpp
         ${EXEC_HEADER_DIR}/stop_token.hpp
         ${EXEC_HEADER_DIR}/sync_wait.hpp

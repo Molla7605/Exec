@@ -9,7 +9,7 @@
 #include "exec/just.hpp"
 #include "exec/let.hpp"
 #include "exec/operation_state.hpp"
-#include "exec/pipe_adapter.hpp"
+#include "exec/sender_adapter_closure.hpp"
 #include "exec/queryable.hpp"
 #include "exec/receiver.hpp"
 #include "exec/run_loop.hpp"
