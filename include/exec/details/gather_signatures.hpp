@@ -4,11 +4,14 @@
 #include "exec/completion_signatures.hpp"
 
 #include "exec/details/indirect_meta_apply.hpp"
-#include "exec/details/select_signatures_by_tag.hpp"
+#include "exec/details/meta_filter.hpp"
 #include "exec/details/signature_info.hpp"
 #include "exec/details/valid_completion_signatures.hpp"
 
 namespace exec::details {
+    template<typename TagT, typename SigT>
+    struct has_same_tag : std::is_same<TagT, completion_tag_of_t<completion_signatures<SigT>>> {};
+
     template<template<typename...> typename TupleT, template<typename...> typename VariantT>
     struct apply_signatures {
         template<typename... Ts>
@@ -20,7 +23,7 @@ namespace exec::details {
              template<typename...> typename TupleT,
              template<typename...> typename VariantT>
     using gather_signatures =
-            elements_of<select_signatures_by_tag_t<TagT, SignatureT>>::template apply<
+            elements_of<meta_filter_t<TagT, SignatureT, has_same_tag>>::template apply<
                 apply_signatures<TupleT, VariantT>::template apply
             >;
 }
