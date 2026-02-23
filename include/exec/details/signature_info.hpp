@@ -3,8 +3,8 @@
 
 #include "exec/completion_signatures.hpp"
 
-#include "exec/details/valid_completion_signatures.hpp"
 #include "exec/details/indirect_meta_apply.hpp"
+#include "exec/details/valid_completion_signatures.hpp"
 
 namespace exec::details {
     template<typename>
