@@ -4,6 +4,8 @@
 #include "exec/env.hpp"
 #include "exec/forwarding_query.hpp"
 
+#include <type_traits>
+
 namespace exec::details {
     template<typename T>
     concept is_forwarding_query = forwarding_query(std::declval<T>());
@@ -20,14 +22,18 @@ namespace exec::details {
     template<typename EnvT>
     forwarding_env(EnvT) -> forwarding_env<EnvT>;
 
-    template<typename EnvT>
-    constexpr forwarding_env<EnvT>& forward_env(forwarding_env<EnvT>& env) noexcept {
-        return env;
-    }
+    template<typename>
+    struct is_forwarding_env : std::false_type {};
 
     template<typename EnvT>
-    constexpr const forwarding_env<EnvT>& forward_env(const forwarding_env<EnvT>& env) noexcept {
-        return env;
+    struct is_forwarding_env<forwarding_env<EnvT>> : std::true_type {};
+
+    template<typename T>
+    concept valid_forwarding_env = is_forwarding_env<std::remove_cvref_t<T>>::value;
+
+    template<valid_forwarding_env EnvT>
+    constexpr decltype(auto) forward_env(EnvT&& env) noexcept {
+        return std::forward<EnvT>(env);
     }
 
     template<typename EnvT>
