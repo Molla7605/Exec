@@ -13,9 +13,13 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/default_completion_signatures.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/dummy_receiver.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/emplace_from.hpp
         ${EXEC_DETAILS_HEADER_DIR}/forward_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/gather_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/indirect_meta_apply.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/is_nothrow_signatures.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/join_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_add.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_append.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_bind.hpp
@@ -25,7 +29,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_not.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
         ${EXEC_DETAILS_HEADER_DIR}/pipe.hpp
-        ${EXEC_DETAILS_HEADER_DIR}/select_signatures_by_tag.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/product_type.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
