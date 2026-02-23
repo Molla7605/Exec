@@ -4,11 +4,13 @@
 #include "exec/completions.hpp"
 #include "exec/completion_signatures.hpp"
 #include "exec/sender.hpp"
+#include "exec/sender_adapter_closure.hpp"
 
 #include "exec/details/basic_closure.hpp"
 #include "exec/details/basic_sender.hpp"
 #include "exec/details/conditional_meta_apply.hpp"
 #include "exec/details/gather_signatures.hpp"
+#include "exec/details/is_nothrow_signatures.hpp"
 #include "exec/details/meta_add.hpp"
 #include "exec/details/meta_bind.hpp"
 #include "exec/details/meta_filter.hpp"
@@ -20,7 +22,6 @@
 
 #include <concepts>
 #include <exception>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -62,39 +63,33 @@ namespace exec {
             }
         }
 
-        static constexpr auto get_completion_signatures = []<typename SenderT, typename EnvT>(SenderT&& sender, EnvT&&) noexcept {
-            return std::forward<SenderT>(sender).apply(
-                    []<typename InvocableT, typename... ChildTs>(auto, InvocableT&&, ChildTs&&...) noexcept {
-                        using child_completion_signatures_t = completion_signatures_of_t<meta_index_t<0, ChildTs...>, EnvT>;
-                        using bool_constants_t =
-                            meta_unique_t<gather_signatures<CompletionT,
-                                                            child_completion_signatures_t,
-                                                            meta_bind_front<is_nothrow_t, InvocableT>::template type,
-                                                            std::tuple>>;
+        static constexpr auto get_completion_signatures = []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
+            using child_sender_t =
+                decltype(std::forward_like<SenderT>(std::declval<child_of_t<SenderT, 0>>()));
+            using invocable_t =
+                decltype(std::forward_like<SenderT>(std::declval<meta_index_of_t<1, std::decay_t<SenderT>>>()));
 
-                        constexpr bool nothrow = std::apply([](auto... bool_constants) noexcept {
-                            return (bool_constants.value && ... && true);
-                        }, bool_constants_t{});
+            using child_completion_signatures_t = completion_signatures_of_t<child_sender_t, EnvT>;
 
-                        using transformed =
-                            meta_add_t<
-                                    gather_signatures<CompletionT,
-                                                      child_completion_signatures_t,
-                                                      meta_bind_front<signature_t, InvocableT>::template type,
-                                                      completion_signatures>,
-                                    meta_filter_t<CompletionT,
-                                                  child_completion_signatures_t,
-                                                  meta_not<has_same_tag>::type>
-                                >;
+            using transformed =
+                meta_add_t<gather_signatures<CompletionT,
+                                             child_completion_signatures_t,
+                                             meta_bind_front<signature_t, invocable_t>::template type,
+                                             completion_signatures>,
+                           meta_filter_t<CompletionT,
+                                         child_completion_signatures_t,
+                                         meta_not<has_same_tag>::type>>;
 
-                        if constexpr (nothrow) {
-                            return meta_unique_t<transformed>{};
-                        }
-                        else {
-                            return meta_merge_t<transformed,
-                                                completion_signatures<exec::set_error_t(std::exception_ptr)>>{};
-                        }
-                    });
+            constexpr bool nothrow =
+                is_nothrow_signatures<invocable_t, meta_filter_t<CompletionT, child_completion_signatures_t, has_same_tag>>;
+
+            if constexpr (nothrow) {
+                return meta_unique_t<transformed>{};
+            }
+            else {
+                return meta_merge_t<transformed,
+                                    completion_signatures<exec::set_error_t(std::exception_ptr)>>{};
+            }
         };
 
         static constexpr auto complete =
