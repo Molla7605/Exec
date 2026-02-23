@@ -22,7 +22,9 @@ namespace exec {
 
     struct connect_t {
         template<typename SenderT, typename ReceiverT>
-        [[nodiscard]] constexpr auto operator()(SenderT&& sender, ReceiverT&& receiver) const {
+        [[nodiscard]] constexpr decltype(auto) operator()(SenderT&& sender, ReceiverT&& receiver) const
+            noexcept(noexcept(std::declval<SenderT>().connect(std::declval<ReceiverT>())))
+        {
             return std::forward<SenderT>(sender).connect(std::forward<ReceiverT>(receiver));
         }
     };
