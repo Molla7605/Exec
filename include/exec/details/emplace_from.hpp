@@ -2,7 +2,9 @@
 #define EXEC_DETAILS_EMPLACE_FROM_HPP
 
 #include <concepts>
+#include <functional>
 #include <type_traits>
+#include <utility>
 
 namespace exec::details {
     template<std::invocable InvocableT>
