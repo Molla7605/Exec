@@ -1,26 +1,27 @@
 #ifndef EXEC_CONTINUES_ON_HPP
 #define EXEC_CONTINUES_ON_HPP
 
-#include "exec/pipe_adapter.hpp"
 #include "exec/scheduler.hpp"
 #include "exec/schedule_from.hpp"
 #include "exec/sender.hpp"
+#include "exec/sender_adapter_closure.hpp"
 
-#include <tuple>
+#include "exec/details/basic_closure.hpp"
+
 #include <utility>
 
 namespace exec {
     struct continues_on_t {
-        constexpr auto operator()(sender auto&& input, scheduler auto&& scheduler) const {
-            return schedule_from(std::forward<decltype(scheduler)>(scheduler), std::forward<decltype(input)>(input));
+        template<sender SenderT, scheduler SchedulerT>
+        constexpr auto operator()(SenderT&& input, SchedulerT&& scheduler) const {
+            return schedule_from(std::forward<SchedulerT>(scheduler), std::forward<SenderT>(input));
         }
 
-        constexpr auto operator()(scheduler auto&& scheduler) const {
-            return pipe_adapter {
-                [this]<typename input_t, typename scheduler_t>(input_t&& input, scheduler_t&& schd) constexpr {
-                    return this->operator()(std::forward<input_t>(input), std::forward<scheduler_t>(schd));
-                },
-                std::make_tuple(std::forward<decltype(scheduler)>(scheduler))
+        template<scheduler SchedulerT>
+        [[nodiscard]] constexpr auto operator()(SchedulerT&& scheduler) const noexcept {
+            return details::basic_closure{
+                sender_adapter_closure<continues_on_t>{},
+                details::product_type{ std::forward<SchedulerT>(scheduler) }
             };
         }
     };
