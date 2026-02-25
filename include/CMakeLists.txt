@@ -6,7 +6,6 @@ INTERFACE
     FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
-        ${EXEC_DETAILS_HEADER_DIR}/as_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/base_stop_callback.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_closure.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_sender.hpp
