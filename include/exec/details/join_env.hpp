@@ -24,8 +24,26 @@ namespace exec::details {
     joined_env(LEnv, REnv) -> joined_env<LEnv, REnv>;
 
     template<typename LEnv, typename REnv>
-    requires std::is_same_v<LEnv, REnv>
-    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, [[maybe_unused]] REnv&& r_env) noexcept {
+    requires (!(std::derived_from<LEnv, empty_env> || std::derived_from<REnv, empty_env>) &&
+              (std::derived_from<LEnv, REnv> || std::derived_from<REnv, LEnv>))
+    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&& r_env) noexcept {
+        if constexpr (valid_forwarding_env<LEnv>) {
+            return std::forward<LEnv>(l_env);
+        }
+        else {
+            return std::forward<REnv>(r_env);
+        }
+    }
+
+    template<typename LEnv, typename REnv>
+    requires std::derived_from<LEnv, empty_env>
+    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&& r_env) noexcept {
+        return std::forward<REnv>(r_env);
+    }
+
+    template<typename LEnv, typename REnv>
+    requires std::derived_from<REnv, empty_env>
+    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&& r_env) noexcept {
         return std::forward<LEnv>(l_env);
     }
 
