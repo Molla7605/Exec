@@ -30,6 +30,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
         ${EXEC_DETAILS_HEADER_DIR}/pipe.hpp
         ${EXEC_DETAILS_HEADER_DIR}/product_type.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/sched_attrs.hpp
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
