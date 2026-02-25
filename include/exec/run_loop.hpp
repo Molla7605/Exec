@@ -64,10 +64,6 @@ namespace exec {
                         return loop->get_scheduler();
                     }
 
-                    [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_error_t>) const noexcept {
-                        return loop->get_scheduler();
-                    }
-
                     [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_stopped_t>) const noexcept {
                         return loop->get_scheduler();
                     }
