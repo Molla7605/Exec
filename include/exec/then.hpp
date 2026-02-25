@@ -81,7 +81,9 @@ namespace exec {
                                          meta_not<has_same_tag>::type>>;
 
             constexpr bool nothrow =
-                is_nothrow_signatures<invocable_t, meta_filter_t<CompletionT, child_completion_signatures_t, has_same_tag>>;
+                is_nothrow_signatures<std::is_nothrow_invocable,
+                                      meta_filter_t<CompletionT, child_completion_signatures_t, has_same_tag>,
+                                      invocable_t>;
 
             if constexpr (nothrow) {
                 return meta_unique_t<transformed>{};

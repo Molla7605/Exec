@@ -8,16 +8,16 @@
 #include <type_traits>
 
 namespace exec::details {
-    template<typename InvocableT, valid_completion_signatures SignaturesT>
+    template<template<typename...> typename EvalT, valid_completion_signatures SignaturesT, typename... DataTs>
     inline constexpr bool is_nothrow_signatures = false;
 
-    template<typename InvocableT, typename TagT, typename... ArgTs>
-    inline constexpr bool is_nothrow_signatures<InvocableT, completion_signatures<TagT(ArgTs...)>> =
-        std::is_nothrow_invocable_v<InvocableT, ArgTs...>;
+    template<template<typename...> typename EvalT, typename TagT, typename... ArgTs, typename... DataTs>
+    inline constexpr bool is_nothrow_signatures<EvalT, completion_signatures<TagT(ArgTs...)>, DataTs...> =
+        EvalT<DataTs..., ArgTs...>::value;
 
-    template<typename InvocableT, typename... SigTs>
-    inline constexpr bool is_nothrow_signatures<InvocableT, completion_signatures<SigTs...>> =
-        (is_nothrow_signatures<InvocableT, SigTs> && ... && (sizeof...(SigTs) > 0));
+    template<template<typename...> typename EvalT, typename... SigTs, typename... DataTs>
+    inline constexpr bool is_nothrow_signatures<EvalT, completion_signatures<SigTs...>, DataTs...> =
+        (EvalT<DataTs..., SigTs>::value && ... && (sizeof...(SigTs) > 0));
 }
 
 #endif // !EXEC_DETAILS_IS_NOTHROW_SIGNATURES_HPP

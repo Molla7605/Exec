@@ -88,12 +88,23 @@ namespace exec {
             completion_signatures_of_t<std::invoke_result_t<InvocableT, std::decay_t<ArgTs>&...>, EnvT>;
 
         template<typename... ArgTs>
-        using nothrow_movable_t =
-            meta_unique_t<std::tuple<std::bool_constant<std::is_nothrow_constructible_v<std::decay_t<ArgTs>, ArgTs>>...>>;
+        struct nothrow_movable {
+            static constexpr bool value =
+                []() consteval {
+                    using tuple_t =
+                        std::tuple<std::bool_constant<std::is_nothrow_constructible_v<std::decay_t<ArgTs>, ArgTs>>...>;
+
+                    return std::apply([]<typename... Ts>(Ts&&... values) noexcept {
+                        return (values && ... && true);
+                    }, tuple_t{});
+                }();
+        };
 
         template<typename InvocableT, typename ReceiverT, typename... ArgTs>
-        using nothrow_connectable_t =
-            std::bool_constant<std::is_nothrow_invocable_v<connect_t, std::invoke_result_t<InvocableT, ArgTs...>, ReceiverT>>;
+        struct nothrow_connectable {
+            static constexpr bool value =
+                std::is_nothrow_invocable_v<connect_t, std::invoke_result_t<InvocableT, ArgTs...>, ReceiverT>;
+        };
 
         template<typename StateT, typename ReceiverT, typename... Ts>
         static void bind(StateT& state, ReceiverT& receiver, Ts&&... args) {
@@ -149,34 +160,19 @@ namespace exec {
                                       meta_not<has_same_tag>::type>
                     >;
 
+                using signatures_by_completion_t = meta_filter_t<CompletionT,
+                                                                 child_completion_signatures_t,
+                                                                 has_same_tag>;
+
                 constexpr bool nothrow =
-                    is_nothrow_signatures<invocable_t,
-                                          meta_filter_t<CompletionT,
-                                                        child_completion_signatures_t,
-                                                        has_same_tag>> &&
-                    []() consteval {
-                        using t = gather_signatures<CompletionT,
-                                                    child_completion_signatures_t,
-                                                    nothrow_movable_t,
-                                                    meta_bind_front<meta_add_t,
-                                                                    std::tuple<std::true_type>>::type>;
-
-                        return std::apply([]<typename... Ts>(Ts... values) noexcept {
-                            return (values && ... && true);
-                        }, t{});
-                    }() &&
-                    []() consteval {
-                        using t = gather_signatures<CompletionT,
-                                                    child_completion_signatures_t,
-                                                    meta_bind_front<nothrow_connectable_t,
-                                                                    invocable_t,
-                                                                    dummy_receiver<EnvT>>::template type,
-                                                    std::tuple>;
-
-                        return std::apply([]<typename... Ts>(Ts... values) noexcept {
-                            return (values && ... && true);
-                        }, t{});
-                    }();
+                    is_nothrow_signatures<std::is_nothrow_invocable,
+                                          signatures_by_completion_t,
+                                          invocable_t> &&
+                    is_nothrow_signatures<nothrow_movable,
+                                          signatures_by_completion_t> &&
+                    is_nothrow_signatures<nothrow_connectable,
+                                          signatures_by_completion_t,
+                                          invocable_t, dummy_receiver<EnvT>>;
 
 
                 if constexpr (nothrow) {
