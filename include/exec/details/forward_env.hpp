@@ -8,7 +8,7 @@
 
 namespace exec::details {
     template<typename T>
-    concept is_forwarding_query = forwarding_query(std::declval<T>());
+    concept is_forwarding_query = forwarding_query(T{});
 
     template<typename EnvT>
     struct forwarding_env : EnvT {

@@ -8,7 +8,7 @@ namespace exec {
     struct forwarding_query_t {
         template<typename QueryT>
         [[nodiscard]] consteval bool operator()(const QueryT& query) const noexcept {
-            if constexpr (requires { std::declval<QueryT>().query(std::declval<forwarding_query_t>()); }) {
+            if constexpr (requires { std::declval<QueryT>().query(forwarding_query_t{}); }) {
                 return query.query(*this);
             }
 
