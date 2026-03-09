@@ -35,8 +35,8 @@ namespace exec::details {
     struct sync_wait_env {
         run_loop* loop;
 
-        [[nodiscard]] constexpr run_loop* query(get_scheduler_t) const noexcept {
-            return loop;
+        [[nodiscard]] constexpr decltype(auto) query(get_scheduler_t) const noexcept {
+            return loop->get_scheduler();
         }
     };
 
