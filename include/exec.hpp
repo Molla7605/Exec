@@ -1,9 +1,12 @@
 #ifndef EXEC_EXEC_HPP
 #define EXEC_EXEC_HPP
 
+#include "exec/allocator.hpp"
+#include "exec/associate.hpp"
 #include "exec/completion_signatures.hpp"
 #include "exec/completions.hpp"
 #include "exec/continues_on.hpp"
+#include "exec/counting_scope.hpp"
 #include "exec/env.hpp"
 #include "exec/forwarding_query.hpp"
 #include "exec/just.hpp"
@@ -15,10 +18,14 @@
 #include "exec/run_loop.hpp"
 #include "exec/schedule_from.hpp"
 #include "exec/scheduler.hpp"
+#include "exec/scope_association.hpp"
+#include "exec/scope_token.hpp"
 #include "exec/sender.hpp"
+#include "exec/spawn.hpp"
+#include "exec/spawn_future.hpp"
+#include "exec/starts_on.hpp"
 #include "exec/stop_token.hpp"
 #include "exec/sync_wait.hpp"
-#include "exec/starts_on.hpp"
 #include "exec/then.hpp"
 #include "exec/transform_completion_signatures.hpp"
 
