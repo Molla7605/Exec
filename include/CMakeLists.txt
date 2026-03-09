@@ -48,7 +48,7 @@ INTERFACE
         ${EXEC_HEADER_DIR}/completion_signatures.hpp
         ${EXEC_HEADER_DIR}/completions.hpp
         ${EXEC_HEADER_DIR}/continues_on.hpp
-        ${EXEC_HEADER_DIR}/counting_scope.hpp
+        ${EXEC_HEADER_DIR}/counting_scopes.hpp
         ${EXEC_HEADER_DIR}/env.hpp
         ${EXEC_HEADER_DIR}/just.hpp
         ${EXEC_HEADER_DIR}/let.hpp
@@ -62,7 +62,6 @@ INTERFACE
         ${EXEC_HEADER_DIR}/scope_token.hpp
         ${EXEC_HEADER_DIR}/sender.hpp
         ${EXEC_HEADER_DIR}/sender_adapter_closure.hpp
-        ${EXEC_HEADER_DIR}/simple_counting_scope.hpp
         ${EXEC_HEADER_DIR}/spawn.hpp
         ${EXEC_HEADER_DIR}/spawn_future.hpp
         ${EXEC_HEADER_DIR}/starts_on.hpp
