@@ -6,6 +6,7 @@ INTERFACE
     FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
+        ${EXEC_DETAILS_HEADER_DIR}/association.hpp
         ${EXEC_DETAILS_HEADER_DIR}/base_stop_callback.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_closure.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_sender.hpp
@@ -57,6 +58,7 @@ INTERFACE
         ${EXEC_HEADER_DIR}/run_loop.hpp
         ${EXEC_HEADER_DIR}/schedule_from.hpp
         ${EXEC_HEADER_DIR}/scheduler.hpp
+        ${EXEC_HEADER_DIR}/scope_association.hpp
         ${EXEC_HEADER_DIR}/scope_token.hpp
         ${EXEC_HEADER_DIR}/sender.hpp
         ${EXEC_HEADER_DIR}/sender_adapter_closure.hpp

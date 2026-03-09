@@ -8,6 +8,8 @@
 #include "exec/scope_token.hpp"
 #include "exec/operation_state.hpp"
 
+#include "exec/details/association.hpp"
+
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -25,11 +27,11 @@ namespace exec {
         spawn_operation_state_base* op;
 
         void set_value() && noexcept {
-            op->start();
+            exec::start(*op);
         }
 
         void set_stopped() && noexcept {
-            op->start();
+            exec::start(*op);
         }
 
         [[nodiscard]] constexpr empty_env query(get_env_t) const noexcept {
@@ -43,39 +45,33 @@ namespace exec {
 
         using op_t = connect_result_t<SenderT, spawn_receiver>;
         using alloc_t = std::allocator_traits<AllocT>::template rebind_alloc<spawn_operation_state>;
+        using assoc_t = details::association_of_t<TokenT>;
 
         alloc_t alloc;
-        TokenT token;
+        assoc_t association;
         op_t op;
 
         spawn_operation_state(AllocT alloc, SenderT&& sender, TokenT token)
             noexcept(noexcept(exec::connect(std::forward<SenderT>(sender), spawn_receiver{ nullptr }))) :
-                alloc(alloc),
-                token(token),
-                op(exec::connect(token.wrap(std::forward<SenderT>(sender)), spawn_receiver{ this })) {}
+                alloc(std::move(alloc)),
+                association(token.try_associate()),
+                op(exec::connect(std::forward<SenderT>(sender), spawn_receiver{ this })) {}
 
         void start() & noexcept override {
-            auto local_token = std::move(token);
-
-            destroy();
-
-            local_token.disassociate();
-        }
-
-        void run() {
-            if (token.try_associate()) {
-                exec::start(op);
-            }
-            else {
-                destroy();
-            }
-        }
-
-        void destroy() noexcept {
+            auto local_association = std::move(association);
             auto local_alloc = std::move(alloc);
 
             std::allocator_traits<alloc_t>::destroy(local_alloc, this);
             std::allocator_traits<alloc_t>::deallocate(local_alloc, this, 1);
+        }
+
+        void run() noexcept {
+            if (association) {
+                exec::start(op);
+            }
+            else {
+                exec::start(*this);
+            }
         }
     };
 
@@ -109,13 +105,7 @@ namespace exec {
                 throw;
             }
 
-            try {
-                op->run();
-            }
-            catch (...) {
-                op->destroy();
-                throw;
-            }
+            op->run();
         }
     };
     inline constexpr spawn_t spawn{};
