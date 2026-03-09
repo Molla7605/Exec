@@ -1,7 +1,7 @@
 #ifndef EXEC_ALLOCATOR_HPP
 #define EXEC_ALLOCATOR_HPP
 
-#include "exec/query.hpp"
+#include "exec/forwarding_query.hpp"
 
 #include <concepts>
 #include <cstddef>
