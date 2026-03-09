@@ -37,7 +37,7 @@ namespace exec::details {
     }
 
     template<typename EnvT>
-    constexpr forwarding_env<EnvT> forward_env(EnvT&& env) noexcept {
+    constexpr forwarding_env<std::decay_t<EnvT>> forward_env(EnvT&& env) noexcept {
         return { std::forward<EnvT>(env) };
     }
 
