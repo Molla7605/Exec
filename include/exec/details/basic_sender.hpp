@@ -71,6 +71,9 @@ namespace exec::details {
     using child_of_t = decltype(std::declval<SenderT>().template get<INDEX + 2>());
 
     template<typename SenderT>
+    using data_of_t = decltype(std::declval<SenderT>().template get<1>());
+
+    template<typename SenderT>
     using indices_for = std::remove_reference_t<SenderT>::indices_for;
 
     template<typename SenderT, typename ReceiverT>
@@ -180,6 +183,16 @@ namespace exec::details {
         }
 
     };
+
+    template<std::size_t INDEX, typename SenderT>
+    constexpr decltype(auto) get_child(SenderT&& sender) noexcept {
+        return std::forward<SenderT>(sender).template get<INDEX + 2>();
+    }
+
+    template<typename SenderT>
+    constexpr decltype(auto) get_data(SenderT&& sender) noexcept {
+        return std::forward<SenderT>(sender).template get<1>();
+    }
 
     template<typename TagT, typename DataT, typename... ChildTs>
     constexpr auto make_sender(TagT tag, DataT&& data, ChildTs&&... children) ->
