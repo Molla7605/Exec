@@ -78,11 +78,11 @@ namespace exec {
     struct spawn_t {
         template<sender SenderT, scope_token TokenT, typename EnvT = empty_env>
         void operator()(SenderT&& sender, TokenT token, EnvT env = {}) const {
-            constexpr auto get_alloc = [&] constexpr noexcept {
-                if constexpr (requires { get_allocator(env); }) {
+            auto get_alloc = [&] noexcept {
+                if constexpr (requires { env.query(get_allocator_t{}); }) {
                     return get_allocator(env);
                 }
-                if constexpr (requires { get_allocator(sender); }) {
+                if constexpr (requires { sender.query(get_allocator_t{}); }) {
                     return get_allocator(sender);
                 }
 
@@ -92,16 +92,16 @@ namespace exec {
             using src_alloc_t = std::remove_cvref_t<decltype(get_alloc())>;
             using op_t = spawn_operation_state<src_alloc_t, std::remove_cvref_t<SenderT>, TokenT>;
 
-            using alloc_t = std::allocator_traits<src_alloc_t>::template rebind_alloc<op_t>;
+            using traits_t = std::allocator_traits<src_alloc_t>::template rebind_traits<op_t>;
 
-            alloc_t alloc = get_alloc();
-            op_t* op = std::allocator_traits<alloc_t>::allocate(alloc, 1);
+            typename traits_t::allocator_type alloc(get_alloc());
+            op_t* op = traits_t::allocate(alloc, 1);
 
             try {
-                std::allocator_traits<alloc_t>::construct(alloc, op, alloc, std::forward<SenderT>(sender), token);
+                traits_t::construct(alloc, op, alloc, std::forward<SenderT>(sender), token);
             }
             catch (...) {
-                std::allocator_traits<alloc_t>::deallocate(alloc, op, 1);
+                traits_t::deallocate(alloc, op, 1);
                 throw;
             }
 
