@@ -11,6 +11,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/basic_closure.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_sender.hpp
         ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/counting_scope_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
         ${EXEC_DETAILS_HEADER_DIR}/default_completion_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/dummy_receiver.hpp
