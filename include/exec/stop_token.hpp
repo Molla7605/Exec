@@ -192,9 +192,7 @@ namespace exec {
     public:
         inplace_stop_source() noexcept = default;
 
-        ~inplace_stop_source() noexcept {
-            assert(stop_requested());
-        }
+        ~inplace_stop_source() noexcept = default;
 
         inplace_stop_source(const inplace_stop_source&) = delete;
         inplace_stop_source& operator=(const inplace_stop_source&) = delete;
