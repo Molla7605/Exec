@@ -35,7 +35,7 @@ namespace exec::details {
             };
 
         static constexpr auto get_state =
-            []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver) noexcept -> decltype(auto) {
+            []<typename SenderT>(SenderT&& sender, auto&) noexcept -> decltype(auto) {
                 return std::forward<SenderT>(sender).apply(
                     [&]<typename DataT>(auto&&, DataT&& data, auto&&...) mutable noexcept -> decltype(auto) {
                         return std::forward<DataT>(data);
