@@ -35,6 +35,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/stop_when.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stoppable_callback_for.hpp
         ${EXEC_DETAILS_HEADER_DIR}/sync_wait_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_holder.hpp
