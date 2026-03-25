@@ -90,7 +90,8 @@ namespace exec {
             };
 
             using src_alloc_t = std::remove_cvref_t<decltype(get_alloc())>;
-            using op_t = spawn_operation_state<src_alloc_t, std::remove_cvref_t<SenderT>, TokenT>;
+            using wrapped_sender_t = std::remove_cvref_t<decltype(token.wrap(std::declval<SenderT>()))>;
+            using op_t = spawn_operation_state<src_alloc_t, wrapped_sender_t, TokenT>;
 
             using traits_t = std::allocator_traits<src_alloc_t>::template rebind_traits<op_t>;
 
@@ -98,7 +99,7 @@ namespace exec {
             op_t* op = traits_t::allocate(alloc, 1);
 
             try {
-                traits_t::construct(alloc, op, alloc, std::forward<SenderT>(sender), token);
+                traits_t::construct(alloc, op, alloc, token.wrap(std::forward<SenderT>(sender)), token);
             }
             catch (...) {
                 traits_t::deallocate(alloc, op, 1);
