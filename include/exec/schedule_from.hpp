@@ -153,13 +153,7 @@ namespace exec {
                             op(exec::connect(exec::schedule(schd), receiver_t{ this })) {}
                 };
 
-                return std::forward<SenderT>(sender).apply(
-                    [&]<typename SchedulerT>(auto&&, SchedulerT&& scheduler, auto&&...)
-                        mutable noexcept(std::is_nothrow_constructible_v<state>) -> decltype(auto)
-                    {
-                        return state{ scheduler, receiver };
-                    }
-                );
+                return state{ get_data(std::forward<SenderT>(sender)), receiver };
             };
 
         static constexpr auto complete =
