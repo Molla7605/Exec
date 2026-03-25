@@ -102,7 +102,7 @@ namespace exec {
         };
 
     public:
-        run_loop() noexcept : m_finished(false), m_worker_count(0) {}
+        run_loop() noexcept : m_finished(false) {}
 
         run_loop(run_loop&&) = delete;
 
@@ -166,9 +166,9 @@ namespace exec {
         mutable std::mutex m_mutex;
 
         bool m_finished;
-        std::atomic_size_t m_worker_count;
         std::condition_variable m_cv;
         std::queue<operation_state_base*> m_queue;
+
     };
 }
 
