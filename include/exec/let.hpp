@@ -184,7 +184,7 @@ namespace exec {
             };
 
         static constexpr auto get_state =
-            []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver) noexcept {
+            []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT&) noexcept {
                 using child_sender_t = child_of_t<SenderT, 0>;
                 using env_t = env<child_sender_t>;
                 using invocable_t = meta_index_of_t<1, std::decay_t<SenderT>>;

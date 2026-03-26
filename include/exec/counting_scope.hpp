@@ -60,7 +60,7 @@ namespace exec {
 
     private:
         friend class token;
-        friend class details::impls_for<details::scope_join_t>;
+        friend struct details::impls_for<details::scope_join_t>;
         friend struct details::association_t<simple_counting_scope>;
 
         [[nodiscard]] assoc_t try_associate() noexcept {
@@ -133,7 +133,7 @@ namespace exec {
 
     private:
         friend class token;
-        friend class details::impls_for<details::scope_join_t>;
+        friend struct details::impls_for<details::scope_join_t>;
         friend struct details::association_t<counting_scope>;
 
         [[nodiscard]] assoc_t try_associate() noexcept {

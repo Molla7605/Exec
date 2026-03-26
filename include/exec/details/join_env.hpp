@@ -37,13 +37,13 @@ namespace exec::details {
 
     template<typename LEnv, typename REnv>
     requires std::derived_from<LEnv, empty_env>
-    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&& r_env) noexcept {
+    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&&, REnv&& r_env) noexcept {
         return std::forward<REnv>(r_env);
     }
 
     template<typename LEnv, typename REnv>
     requires std::derived_from<REnv, empty_env>
-    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&& r_env) noexcept {
+    [[nodiscard]] constexpr decltype(auto) join_env(LEnv&& l_env, REnv&&) noexcept {
         return std::forward<LEnv>(l_env);
     }
 
