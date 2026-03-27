@@ -64,6 +64,7 @@ namespace exec {
             using receiver_concept = exec::receiver_t;
 
             StateT* state;
+            ReceiverT& receiver;
 
             void set_value() && noexcept {
                 std::visit(
@@ -71,7 +72,7 @@ namespace exec {
                         if constexpr (!std::same_as<std::monostate, TupleT>) {
                             std::apply(
                                 [this]<typename TagT, typename... Ts>(TagT& tag, Ts&... values) noexcept {
-                                    tag(std::move(state->receiver), std::move(values)...);
+                                    tag(std::move(receiver), std::move(values)...);
                                 },
                                 tuple
                             );
@@ -83,15 +84,15 @@ namespace exec {
 
             template<typename T>
             void set_error(T&& value) && noexcept {
-                exec::set_error(std::move(state->receiver), std::forward<T>(value));
+                exec::set_error(std::move(receiver), std::forward<T>(value));
             }
 
             void set_stopped() && noexcept {
-                exec::set_stopped(std::move(state->receiver));
+                exec::set_stopped(std::move(receiver));
             }
 
-            [[nodiscard]] constexpr forward_env_of_t<ReceiverT> get_env() const noexcept {
-                return forward_env(exec::get_env(state->receiver));
+            [[nodiscard]] constexpr auto get_env() const noexcept {
+                return forward_env(exec::get_env(receiver));
             }
         };
 
@@ -147,9 +148,9 @@ namespace exec {
                     op_t op;
 
                     explicit state(scheduler_t schd, ReceiverT& receiver)
-                        noexcept(noexcept(exec::connect(exec::schedule(schd), receiver_t{ nullptr }))) :
+                        noexcept(noexcept(exec::connect(exec::schedule(schd), receiver_t{ nullptr, receiver }))) :
                             receiver(receiver),
-                            op(exec::connect(exec::schedule(schd), receiver_t{ this })) {}
+                            op(exec::connect(exec::schedule(schd), receiver_t{ this, receiver })) {}
                 };
 
                 return state{ get_data(std::forward<SenderT>(sender)), receiver };
