@@ -1,0 +1,6 @@
+add_executable(ExecExampleCountingScopes)
+add_executable(Exec::Examples::CountingScopes ALIAS ExecExampleCountingScopes)
+
+target_link_libraries(ExecExampleCountingScopes PUBLIC Exec)
+
+target_sources(ExecExampleCountingScopes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/counting_scopes.cpp)
