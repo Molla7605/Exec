@@ -17,7 +17,7 @@ namespace exec::details {
 
     template<template<typename...> typename EvalT, typename... SigTs, typename... DataTs>
     inline constexpr bool is_nothrow_signatures<EvalT, completion_signatures<SigTs...>, DataTs...> =
-        (EvalT<DataTs..., SigTs>::value && ... && (sizeof...(SigTs) > 0));
+        (EvalT<DataTs..., SigTs>::value && ... && true);
 }
 
 #endif // !EXEC_DETAILS_IS_NOTHROW_SIGNATURES_HPP
