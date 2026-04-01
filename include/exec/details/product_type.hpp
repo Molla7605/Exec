@@ -2,6 +2,7 @@
 #define EXEC_DETAILS_PRODUCT_TYPE_HPP
 
 #include "exec/details/meta_index.hpp"
+#include "exec/details/meta_add.hpp"
 
 #include <functional>
 #include <type_traits>
@@ -41,10 +42,26 @@ namespace exec::details {
     };
 
     template<typename... Ts>
-    struct product_type : product_type_impl<std::make_index_sequence<sizeof...(Ts)>, Ts...> {};
+    struct product_type : product_type_impl<std::make_index_sequence<sizeof...(Ts)>, Ts...> {
+        static constexpr std::size_t SIZE = sizeof...(Ts);
+    };
 
     template<typename... Ts>
     product_type(Ts&&...) -> product_type<std::decay_t<Ts>...>;
+
+    template<typename LeftT, typename RightT>
+    [[nodiscard]] constexpr auto merge_product_type(LeftT&& left, RightT&& right)
+        noexcept(std::is_nothrow_constructible_v<std::decay_t<LeftT>, LeftT> &&
+                 std::is_nothrow_constructible_v<std::decay_t<RightT>, RightT>)
+    {
+        return [&]<std::size_t... L_INDICES, std::size_t... R_INDICES>(std::index_sequence<L_INDICES...>, std::index_sequence<R_INDICES...>) {
+            return meta_add_t<std::decay_t<LeftT>, std::decay_t<RightT>>{
+                std::forward<LeftT>(left).template get<L_INDICES>()...,
+                std::forward<RightT>(right).template get<R_INDICES>()...
+            };
+        }(std::make_index_sequence<std::remove_cvref_t<LeftT>::SIZE>{},
+          std::make_index_sequence<std::remove_cvref_t<RightT>::SIZE>{});
+    }
 }
 
 #endif // !EXEC_DETAILS_PRODUCT_TYPE_HPP
