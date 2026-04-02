@@ -1,5 +1,5 @@
-#ifndef EXEC_COUNTING_SCOPE_HPP
-#define EXEC_COUNTING_SCOPE_HPP
+#ifndef EXEC_COUNTING_SCOPES_HPP
+#define EXEC_COUNTING_SCOPES_HPP
 
 #include "exec/sender.hpp"
 #include "exec/stop_token.hpp"
@@ -155,4 +155,4 @@ namespace exec {
     };
 }
 
-#endif // !EXEC_COUNTING_SCOPE_HPP
+#endif // !EXEC_COUNTING_SCOPES_HPP

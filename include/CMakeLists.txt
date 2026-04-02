@@ -1,5 +1,5 @@
 set(EXEC_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exec)
-set(EXEC_DETAILS_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exec)
+set(EXEC_DETAILS_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exec/details)
 
 target_sources(Exec
 INTERFACE
@@ -31,9 +31,10 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
         ${EXEC_DETAILS_HEADER_DIR}/pipe.hpp
         ${EXEC_DETAILS_HEADER_DIR}/product_type.hpp
+		${EXEC_DETAILS_HEADER_DIR}/sched_attrs.hpp
         ${EXEC_DETAILS_HEADER_DIR}/scope_join.hpp
-        ${EXEC_DETAILS_HEADER_DIR}/sched_attrs.hpp
-        ${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
+		${EXEC_DETAILS_HEADER_DIR}/scope_state_flags.hpp
+		${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_when.hpp
@@ -53,10 +54,11 @@ INTERFACE
         ${EXEC_HEADER_DIR}/continues_on.hpp
         ${EXEC_HEADER_DIR}/counting_scopes.hpp
         ${EXEC_HEADER_DIR}/env.hpp
+		${EXEC_HEADER_DIR}/forwarding_query.hpp
         ${EXEC_HEADER_DIR}/just.hpp
         ${EXEC_HEADER_DIR}/let.hpp
         ${EXEC_HEADER_DIR}/operation_state.hpp
-        ${EXEC_HEADER_DIR}/query.hpp
+		${EXEC_HEADER_DIR}/queryable.hpp
         ${EXEC_HEADER_DIR}/receiver.hpp
         ${EXEC_HEADER_DIR}/run_loop.hpp
         ${EXEC_HEADER_DIR}/schedule_from.hpp
@@ -66,7 +68,6 @@ INTERFACE
         ${EXEC_HEADER_DIR}/sender.hpp
         ${EXEC_HEADER_DIR}/sender_adapter_closure.hpp
         ${EXEC_HEADER_DIR}/spawn.hpp
-        ${EXEC_HEADER_DIR}/spawn_future.hpp
         ${EXEC_HEADER_DIR}/starts_on.hpp
         ${EXEC_HEADER_DIR}/stop_token.hpp
         ${EXEC_HEADER_DIR}/sync_wait.hpp
