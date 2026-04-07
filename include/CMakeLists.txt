@@ -54,6 +54,7 @@ INTERFACE
         ${EXEC_HEADER_DIR}/continues_on.hpp
         ${EXEC_HEADER_DIR}/counting_scopes.hpp
         ${EXEC_HEADER_DIR}/env.hpp
+		${EXEC_HEADER_DIR}/forward_progress_guarantee.hpp
 		${EXEC_HEADER_DIR}/forwarding_query.hpp
         ${EXEC_HEADER_DIR}/just.hpp
         ${EXEC_HEADER_DIR}/let.hpp

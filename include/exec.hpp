@@ -8,6 +8,7 @@
 #include "exec/continues_on.hpp"
 #include "exec/counting_scopes.hpp"
 #include "exec/env.hpp"
+#include "exec/forward_progress_guarantee.hpp"
 #include "exec/forwarding_query.hpp"
 #include "exec/just.hpp"
 #include "exec/let.hpp"
