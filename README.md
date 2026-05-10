@@ -5,7 +5,7 @@ It might look messy or terrible, but it works well for my use cases. (Probably) 
 ### Requirements
 * C++23
 * MSVC 19.34+
-* GCC 14+
+* GCC 14+ (GCC 16 currently not working)
 
 ### Example
 ```c++
