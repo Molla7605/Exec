@@ -29,6 +29,17 @@ namespace exec::details {
         using indirect_apply = indirect_meta_apply_t<T, ArgTs...>;
     };
 
+    template<typename T>
+    concept valid_completion_fn =
+        std::is_function_v<T> &&
+        (
+            std::is_same_v<completion_tag_of_t<T>, set_value_t> ||
+            (std::is_same_v<completion_tag_of_t<T>, set_error_t> &&
+             std::is_same_v<typename completion_args_of<T>::template apply<std::index_sequence_for>, std::index_sequence<0>>) ||
+            (std::is_same_v<completion_tag_of_t<T>, set_stopped_t> &&
+             std::is_same_v<typename completion_args_of<T>::template apply<std::index_sequence_for>, std::index_sequence<>>)
+        );
+
 }
 
 #endif // !EXEC_DETAILS_COMPLETION_SIGNATURE_INFO_HPP
