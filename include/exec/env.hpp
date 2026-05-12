@@ -61,6 +61,9 @@ namespace exec {
 
     };
 
+    template<>
+    class env<> {};
+
     template<queryable... PropTs>
     env(PropTs...) -> env<std::decay_t<PropTs>...>;
 
