@@ -41,6 +41,10 @@ namespace exec::details {
         return { std::forward<EnvT>(env) };
     }
 
+    constexpr empty_env forward_env(empty_env) noexcept {
+        return {};
+    }
+
     template<typename T>
     using forward_env_of_t = decltype(forward_env(std::declval<env_of_t<T>>()));
 }
