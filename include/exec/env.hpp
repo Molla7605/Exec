@@ -3,20 +3,15 @@
 
 #include "exec/queryable.hpp"
 
+#include "exec/details/env_traits.hpp"
+#include "exec/details/meta_filter.hpp"
 #include "exec/details/product_type.hpp"
 #include "exec/details/unique_template.hpp"
-#include "exec/details/meta_filter.hpp"
 
 #include <type_traits>
 #include <utility>
 
 namespace exec {
-    template<typename EnvT, typename TagT>
-    concept has_query =
-        requires(const EnvT& env) {
-            env.query(TagT{});
-        };
-
     template<typename TagT, typename ValueT>
     struct prop {
         TagT tag;
