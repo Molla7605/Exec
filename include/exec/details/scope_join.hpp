@@ -29,7 +29,7 @@ namespace exec::details {
 
         template<typename ReceiverT>
         struct second_receiver {
-            using receiver_concept = exec::receiver_t;
+            using receiver_concept = exec::receiver_tag;
 
             ReceiverT& rcvr;
 

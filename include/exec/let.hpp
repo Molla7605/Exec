@@ -55,7 +55,7 @@ namespace exec {
 
         template<typename ReceiverT, typename EnvT>
         struct second_receiver {
-            using receiver_concept = exec::receiver_t;
+            using receiver_concept = exec::receiver_tag;
 
             ReceiverT& receiver;
             EnvT env;

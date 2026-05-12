@@ -5,11 +5,11 @@
 #include <type_traits>
 
 namespace exec {
-    struct operation_state_t {};
+    struct operation_state_tag {};
 
     struct start_t {
         template<typename T>
-        constexpr auto operator()(T& op) const noexcept {
+        constexpr void operator()(T& op) const noexcept {
             op.start();
         }
     };
@@ -17,7 +17,7 @@ namespace exec {
 
     template <typename T>
     concept operation_state =
-        std::derived_from<typename T::operation_state_concept, operation_state_t> &&
+        std::derived_from<typename T::operation_state_concept, operation_state_tag> &&
         std::is_object_v<T> &&
         requires(T& op) {
             { exec::start(op) } noexcept;

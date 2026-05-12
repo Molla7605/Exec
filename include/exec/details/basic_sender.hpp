@@ -90,7 +90,7 @@ namespace exec::details {
 
     template<typename SenderT, typename ReceiverT, typename IndexT>
     struct basic_receiver {
-        using receiver_concept = exec::receiver_t;
+        using receiver_concept = exec::receiver_tag;
 
         using tag_t = tag_of_t<SenderT>;
         using state_t = state_from_tag_t<SenderT, ReceiverT>;
@@ -140,7 +140,7 @@ namespace exec::details {
 
     template<typename SenderT, typename ReceiverT>
     struct basic_operation : basic_state<SenderT, ReceiverT> {
-        using operation_state_concept = exec::operation_state_t;
+        using operation_state_concept = exec::operation_state_tag;
         using tag_t = tag_of_t<SenderT>;
 
         connect_all_result_t<SenderT, ReceiverT> inner;
@@ -161,7 +161,7 @@ namespace exec::details {
 
     template<typename TagT, typename DataT, typename... ChildTs>
     struct basic_sender : product_type<TagT, DataT, ChildTs...> {
-        using sender_concept = exec::sender_t;
+        using sender_concept = exec::sender_tag;
         using indices_for = std::index_sequence_for<ChildTs...>;
 
         [[nodiscard]] constexpr decltype(auto) get_env() const noexcept {

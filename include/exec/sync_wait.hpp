@@ -14,7 +14,7 @@
 namespace exec {
     template<typename SenderT>
     struct sync_wait_receiver {
-        using receiver_concept = receiver_t;
+        using receiver_concept = receiver_tag;
 
         details::sync_wait_state<SenderT>* state;
 

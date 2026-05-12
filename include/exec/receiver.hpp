@@ -8,11 +8,11 @@
 #include <type_traits>
 
 namespace exec {
-    struct receiver_t {};
+    struct receiver_tag {};
 
     template<typename T>
     concept receiver =
-        std::derived_from<typename std::remove_cvref_t<T>::receiver_concept, receiver_t> &&
+        std::derived_from<typename std::remove_cvref_t<T>::receiver_concept, receiver_tag> &&
         requires(const std::remove_cvref_t<T>& rcvr) {
             { get_env(rcvr) } -> queryable;
         } &&

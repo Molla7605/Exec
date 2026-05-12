@@ -11,14 +11,29 @@
 #include <utility>
 
 namespace exec {
-    struct scheduler_t {};
+    struct scheduler_tag {};
 
     struct schedule_t {
-        [[nodiscard]] constexpr sender auto operator()(auto&& schd) const {
-            return std::forward<decltype(schd)>(schd).schedule();
+        template<typename SchedulerT>
+        [[nodiscard]] constexpr auto operator()(SchedulerT&& schd) const noexcept(noexcept(std::declval<SchedulerT>().schedule())) {
+            return std::forward<SchedulerT>(schd).schedule();
         }
     };
     inline constexpr schedule_t schedule{};
+
+    template<typename T>
+    concept scheduler =
+        std::derived_from<typename std::remove_cvref_t<T>::scheduler_concept, scheduler_tag> &&
+        queryable<T> &&
+        requires(T&& schd) {
+            { schedule(std::forward<T>(schd)) } -> sender;
+            { get_forward_progress_guarantee(schd) } -> std::same_as<forward_progress_guarantee>;
+        } &&
+        std::copyable<std::remove_cvref_t<T>> &&
+        std::equality_comparable<std::remove_cvref_t<T>>;
+
+    template<scheduler T>
+    using schedule_result_t = decltype(schedule(std::declval<T>()));
 
     struct get_scheduler_t {
         template<typename EnvT>

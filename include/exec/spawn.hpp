@@ -22,7 +22,7 @@ namespace exec {
     };
 
     struct spawn_receiver {
-        using receiver_concept = exec::receiver_t;
+        using receiver_concept = exec::receiver_tag;
 
         spawn_operation_state_base* op;
 
@@ -41,7 +41,7 @@ namespace exec {
 
     template<typename AllocT, typename SenderT, typename TokenT>
     struct spawn_operation_state : spawn_operation_state_base {
-        using operation_state_concept = exec::operation_state_t;
+        using operation_state_concept = exec::operation_state_tag;
 
         using op_t = connect_result_t<SenderT, spawn_receiver>;
         using alloc_t = std::allocator_traits<AllocT>::template rebind_alloc<spawn_operation_state>;

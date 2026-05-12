@@ -9,11 +9,11 @@
 #include "exec/details/valid_completion_signatures.hpp"
 
 namespace exec {
-    struct sender_t {};
+    struct sender_tag {};
 
     template<typename T>
     concept sender =
-        std::derived_from<typename std::remove_cvref_t<T>::sender_concept, sender_t> &&
+        std::derived_from<typename std::remove_cvref_t<T>::sender_concept, sender_tag> &&
         requires(const std::remove_cvref_t<T>& sndr) {
             { get_env(sndr) } -> queryable;
         } &&

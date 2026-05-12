@@ -8,7 +8,7 @@
 namespace exec::details {
     template<typename EnvT>
     struct dummy_receiver {
-        using receiver_concept = exec::receiver_t;
+        using receiver_concept = exec::receiver_tag;
 
         void set_value(...) && noexcept {
 
