@@ -13,6 +13,9 @@ namespace exec::details {
     template<typename...>
     concept always_true = true;
 
+    template<auto...>
+    concept is_constant = true;
+
     template<template<typename...> typename T, typename... ArgTs>
     using indirect_meta_apply_t = indirect_meta_apply<always_true<ArgTs...>>::template meta_apply<T, ArgTs...>;
 

@@ -3,30 +3,49 @@
 
 #include "exec/env.hpp"
 
-#include <utility>
+#include "exec/details/meta_filter.hpp"
+#include "exec/details/type_holder.hpp"
+#include "exec/details/meta_function.hpp"
+#include "exec/details/completion_signature_info.hpp"
+
+#include <cstddef>
+#include <type_traits>
 
 namespace exec {
-    template<typename...>
-    struct completion_signatures {};
+    template<details::valid_completion_fn... CompletionFnTs>
+    struct completion_signatures {
+        template<typename TagT>
+        [[nodiscard]] static constexpr std::size_t count_of(TagT) noexcept {
+            using filter_t = details::meta_function<decltype(
+                []<typename T, typename... ArgTs>(TagT, details::type_holder<T(ArgTs...)>) consteval {
+                    return std::is_same_v<TagT, T>;
+                })>;
 
-    struct get_completion_signatures_t {
-        template<typename SenderT, typename EnvT>
-        [[nodiscard]] constexpr decltype(auto) operator()(SenderT&& sndr, EnvT&& env) const noexcept
-        requires requires{ std::forward<SenderT>(sndr).get_completion_signatures(std::forward<EnvT>(env)); }
-        {
-            return std::forward<SenderT>(sndr).get_completion_signatures(std::forward<EnvT>(env));
-        }
+            using fns_t = details::meta_filter_t<TagT,
+                                                 details::type_holder<details::type_holder<CompletionFnTs>...>,
+                                                 filter_t::template type>;
 
-        template<typename SenderT, typename EnvT>
-        requires requires{ typename std::remove_cvref_t<SenderT>::completion_signatures; }
-        [[nodiscard]] constexpr auto operator()(const SenderT&, const EnvT&) const noexcept {
-            return typename std::remove_cvref_t<SenderT>::completion_signatures{};
+            return []<typename... Ts>(Ts...) consteval {
+                return sizeof...(Ts);
+            }(fns_t{});
         }
     };
-    inline constexpr get_completion_signatures_t get_completion_signatures{};
 
-    template<typename SenderT, typename EnvT = empty_env>
-    using completion_signatures_of_t = std::invoke_result_t<get_completion_signatures_t, SenderT, EnvT>;
+    template<typename SenderT, typename... EnvTs>
+    [[nodiscard]] consteval auto get_completion_signatures() {
+        // TODO: using new_sender_t = decltype(transform_sender(std::declval<SenderT>(), std::declval<EnvTs>()...));
+        using new_sender_t = SenderT;
+
+        if constexpr (requires { std::remove_cvref_t<SenderT>::template get_completion_signatures<SenderT, EnvTs...>(); }) {
+            return std::remove_cvref_t<new_sender_t>::template get_completion_signatures<new_sender_t, EnvTs...>();
+        }
+        else {
+            return std::remove_cvref_t<new_sender_t>::template get_completion_signatures<new_sender_t>();
+        }
+    }
+
+    template<typename SenderT, typename... EnvTs>
+    using completion_signatures_of_t = decltype(get_completion_signatures<SenderT, EnvTs...>());
 }
 
 #endif // !EXEC_COMPLETION_SIGNATURES_HPP

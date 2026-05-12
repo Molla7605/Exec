@@ -54,6 +54,11 @@ namespace exec::details {
             {
                 TagT{}(std::move(receiver), std::forward<ArgTs>(args)...);
             };
+
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() {
+            static_assert(false, "No completion signatures for this sender");
+        }
     };
 
     template<typename TagT>
@@ -177,9 +182,9 @@ namespace exec::details {
             return { std::forward<Self>(self), std::move(receiver) };
         }
 
-        template<typename Self, typename EnvT>
-        [[nodiscard]] constexpr decltype(auto) get_completion_signatures(this Self&& self, EnvT&& env) noexcept {
-            return impls_for<TagT>::get_completion_signatures(std::forward<Self>(self), std::forward<EnvT>(env));
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() {
+            return impls_for<TagT>::template get_completion_signatures<SenderT, EnvTs...>();
         }
 
     };

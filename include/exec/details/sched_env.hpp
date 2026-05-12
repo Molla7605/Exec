@@ -1,5 +1,5 @@
-#ifndef EXEC_DETAILS_SCHED_ATTRS_HPP
-#define EXEC_DETAILS_SCHED_ATTRS_HPP
+#ifndef EXEC_DETAILS_SCHED_ENV_HPP
+#define EXEC_DETAILS_SCHED_ENV_HPP
 
 #include "exec/scheduler.hpp"
 
@@ -10,9 +10,7 @@ namespace exec::details {
     struct scheduler_attributes {
         SchedulerT scheduler;
 
-        template<typename CompletionT>
-        requires std::invocable<get_completion_scheduler_t<CompletionT>, env_of_t<schedule_result_t<SchedulerT>>>
-        [[nodiscard]] constexpr auto query(get_completion_scheduler_t<CompletionT>) const
+        [[nodiscard]] constexpr auto query(get_start_scheduler_t) const
             noexcept(std::is_nothrow_copy_constructible_v<SchedulerT>)
         {
             return scheduler;
@@ -23,11 +21,11 @@ namespace exec::details {
     scheduler_attributes(SchedulerT) -> scheduler_attributes<std::decay_t<SchedulerT>>;
 
     template<scheduler SchedulerT>
-    [[nodiscard]] constexpr auto sched_attrs(SchedulerT schd)
-        noexcept(std::is_nothrow_constructible_v<scheduler_attributes<std::decay_t<SchedulerT>>>)
+    [[nodiscard]] constexpr auto sched_env(SchedulerT schd)
+        noexcept(std::is_nothrow_constructible_v<scheduler_attributes<SchedulerT>, SchedulerT>)
     {
         return scheduler_attributes{ schd };
     }
 }
 
-#endif // !EXEC_DETAILS_SCHED_ATTRS_HPP
+#endif // !EXEC_DETAILS_SCHED_ENV_HPP

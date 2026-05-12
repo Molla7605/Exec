@@ -20,14 +20,12 @@ namespace exec {
         template<typename... Ts>
         using signature_t = completion_signatures<CompletionT(Ts...)>;
 
-        static constexpr auto get_completion_signatures =
-            []<typename SenderT, typename EnvT>(const SenderT& sender, const EnvT&) noexcept {
-                return sender.apply([]<typename DataT>(auto&&, const DataT&, auto&&...) noexcept ->
-                           elements_of<DataT>::template apply<signature_t>
-                       {
-                           return {};
-                       });
-            };
+        template<typename SenderT, typename...>
+        [[nodiscard]] static consteval auto get_completion_signatures() noexcept {
+            using result_t = elements_of<std::remove_cvref_t<data_of_t<SenderT>>>::template apply<signature_t>;
+
+            return result_t{};
+        }
 
         static constexpr auto start =
             []<typename StateT, typename ReceiverT>(StateT& state, ReceiverT& receiver, auto&&...) noexcept {
@@ -40,7 +38,7 @@ namespace exec {
     template<>
     struct just_tag_t<exec::set_value_t> {
         template<typename... Ts>
-        [[nodiscard]] constexpr decltype(auto) operator()(Ts&&... values) const {
+        [[nodiscard]] constexpr auto operator()(Ts&&... values) const {
             return details::make_sender(*this, details::product_type{ std::forward<Ts>(values)... });
         }
     };
@@ -50,7 +48,7 @@ namespace exec {
     template<>
     struct just_tag_t<exec::set_error_t> {
         template<typename T>
-        [[nodiscard]] constexpr decltype(auto) operator()(T&& value) const {
+        [[nodiscard]] constexpr auto operator()(T&& value) const {
             return details::make_sender(*this, details::product_type{ std::forward<T>(value) });
         }
     };
@@ -59,7 +57,7 @@ namespace exec {
 
     template<>
     struct just_tag_t<exec::set_stopped_t> {
-        [[nodiscard]] constexpr decltype(auto) operator()() const {
+        [[nodiscard]] constexpr auto operator()() const {
             return details::make_sender(*this, details::product_type{});
         }
     };

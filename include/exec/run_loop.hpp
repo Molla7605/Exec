@@ -37,11 +37,16 @@ namespace exec {
             ReceiverT receiver;
 
             void run() noexcept override {
-                if (get_stop_token(exec::get_env(receiver)).stop_requested()) {
-                    set_stopped(std::move(receiver));
+                if constexpr (unstoppable_token<stop_token_of_t<env_of_t<ReceiverT>>>) {
+                    if (get_stop_token(exec::get_env(receiver)).stop_requested()) {
+                        exec::set_stopped(std::move(receiver));
+                    }
+                    else {
+                        exec::set_value(std::move(receiver));
+                    }
                 }
                 else {
-                    set_value(std::move(receiver));
+                    exec::set_value(std::move(receiver));
                 }
             }
 
@@ -50,31 +55,38 @@ namespace exec {
                     loop->push_back(this);
                 }
                 catch (...) {
-                    set_error(std::move(receiver), std::current_exception());
+                    exec::set_error(std::move(receiver), std::current_exception());
                 }
+            }
+        };
+
+        struct env {
+            run_loop* loop;
+
+            [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_value_t>) const noexcept {
+                return loop->get_scheduler();
+            }
+
+            [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_stopped_t>) const noexcept {
+                return loop->get_scheduler();
             }
         };
 
         struct scheduler {
             struct sender {
-                struct env {
-                    run_loop* loop;
-
-                    [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_value_t>) const noexcept {
-                        return loop->get_scheduler();
-                    }
-
-                    [[nodiscard]] constexpr auto query(get_completion_scheduler_t<set_stopped_t>) const noexcept {
-                        return loop->get_scheduler();
-                    }
-                };
-
-
-                using completion_signatures =
-                    completion_signatures<set_value_t(), set_error_t(std::exception_ptr), set_stopped_t()>;
                 using sender_concept = sender_tag;
 
                 run_loop* loop;
+
+                template<typename SenderT, typename... EnvTs>
+                [[nodiscard]] static consteval auto get_completion_signatures() noexcept {
+                    if constexpr (unstoppable_token<stop_token_of_t<details::meta_index_t<0, EnvTs...>>>) {
+                        return exec::completion_signatures<set_value_t(), set_error_t(std::exception_ptr)>{};
+                    }
+                    else {
+                        return exec::completion_signatures<set_value_t(), set_error_t(std::exception_ptr), set_stopped_t()>{};
+                    }
+                }
 
                 [[nodiscard]] auto get_env() const noexcept {
                     return env{ loop };
@@ -88,6 +100,10 @@ namespace exec {
             using scheduler_concept = scheduler_tag;
 
             run_loop* loop;
+
+            [[nodiscard]] auto get_env() const noexcept {
+                return env{ loop };
+            }
 
             [[nodiscard]] constexpr sender schedule() const {
                 return sender{ loop };

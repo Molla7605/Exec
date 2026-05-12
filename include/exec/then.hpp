@@ -63,13 +63,14 @@ namespace exec {
             }
         }
 
-        static constexpr auto get_completion_signatures = []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() noexcept {
             using child_sender_t =
                 decltype(std::forward_like<SenderT>(std::declval<child_of_t<SenderT, 0>>()));
             using invocable_t =
                 decltype(std::forward_like<SenderT>(std::declval<meta_index_of_t<1, std::decay_t<SenderT>>>()));
 
-            using child_completion_signatures_t = completion_signatures_of_t<child_sender_t, EnvT>;
+            using child_completion_signatures_t = completion_signatures_of_t<child_sender_t, EnvTs...>;
 
             using transformed =
                 meta_add_t<gather_signatures<CompletionT,
@@ -92,7 +93,7 @@ namespace exec {
                 return meta_merge_t<transformed,
                                     completion_signatures<exec::set_error_t(std::exception_ptr)>>{};
             }
-        };
+        }
 
         static constexpr auto complete =
             []<typename InvocableT, typename ReceiverT, typename TagT, typename... ArgTs>

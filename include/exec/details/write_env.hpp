@@ -13,10 +13,10 @@ namespace exec::details {
 
     template<>
     struct impls_for<write_env_t> : default_impls {
-        static constexpr auto get_completion_signatures =
-            []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
-                return completion_signatures_of_t<child_of_t<SenderT>, EnvT>{};
-            };
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() noexcept {
+            return completion_signatures_of_t<child_of_t<SenderT>, EnvTs...>{};
+        }
 
         static constexpr auto get_env =
             []<typename StateT, typename ReceiverT>

@@ -4,7 +4,7 @@
 #include "exec/env.hpp"
 #include "exec/queryable.hpp"
 
-#include "exec/details/valid_completion_signatures.hpp"
+#include "exec/details/indirect_meta_apply.hpp"
 
 namespace exec {
     struct sender_tag {};
@@ -31,15 +31,12 @@ namespace exec {
     template<typename SenderT, typename ReceiverT>
     using connect_result_t = decltype(connect(std::declval<SenderT>(), std::declval<ReceiverT>()));
 
-    template<typename SenderT, typename EnvT = empty_env>
+    template<typename SenderT, typename... EnvTs>
     concept sender_in =
         sender<SenderT> &&
-        queryable<EnvT> &&
-        requires(SenderT&& sndr, EnvT&& env) {
-            { get_completion_signatures(std::forward<SenderT>(sndr), std::forward<EnvT>(env)) } ->
-                details::valid_completion_signatures;
-        };
-
+        (sizeof...(EnvTs) <= 1) &&
+        (queryable<EnvTs> && ...) &&
+        details::is_constant<get_completion_signatures<SenderT, EnvTs...>()>;
 }
 
 #endif // !EXEC_SENDER_HPP

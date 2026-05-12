@@ -3,7 +3,6 @@
 
 #include "exec/completions.hpp"
 #include "exec/completion_signatures.hpp"
-#include "exec/env.hpp"
 #include "exec/operation_state.hpp"
 #include "exec/scope_token.hpp"
 #include "exec/sender.hpp"
@@ -61,23 +60,15 @@ namespace exec {
 
         };
 
-        // template<typename TokenT, typename SenderT>
-        // data(TokenT, SenderT&&) -> data<std::decay_t<TokenT>, std::decay_t<SenderT>>;
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] consteval auto get_completion_signatures() {
+            using data_t = std::remove_cvref_t<data_of_t<SenderT>>;
 
-        static constexpr auto get_attrs =
-            [](const auto&, const auto&...) noexcept -> empty_env {
-                return {};
-            };
+            using wrapped_sender_t =
+                decltype(std::forward_like<SenderT>(std::declval<typename data_t::wrapped_sender_t>()));
 
-        static constexpr auto get_completion_signatures =
-            []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
-                using data_t = std::remove_cvref_t<data_of_t<SenderT>>;
-
-                using wrapped_sender_t =
-                    decltype(std::forward_like<SenderT>(std::declval<typename data_t::wrapped_sender_t>()));
-
-                return completion_signatures_of_t<wrapped_sender_t, EnvT>{};
-            };
+            return completion_signatures_of_t<wrapped_sender_t, EnvTs...>{};
+        }
 
         static constexpr auto get_state =
             []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver)

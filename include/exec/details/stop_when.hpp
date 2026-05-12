@@ -90,12 +90,11 @@ namespace exec::details {
 
     template<>
     struct impls_for<stop_when_t> : default_impls {
-        static constexpr auto get_completion_signatures =
-            []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
-                return transform_completion_signatures_of<child_of_t<SenderT>,
-                                                          EnvT,
-                                                          completion_signatures<exec::set_stopped_t()>>{};
-            };
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() {
+            return meta_append_back_t<completion_signatures_of_t<child_of_t<SenderT>, EnvTs...>,
+                                      exec::set_stopped_t()>{};
+        }
 
         static constexpr auto get_state =
             []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver) noexcept {

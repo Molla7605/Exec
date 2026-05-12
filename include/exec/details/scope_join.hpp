@@ -78,16 +78,16 @@ namespace exec::details {
             }
         };
 
-        static constexpr auto get_completion_signatures =
-            []<typename SenderT, typename EnvT>(SenderT&&, EnvT&&) noexcept {
-                if constexpr (requires{ get_scheduler(std::declval<EnvT>()); }) {
-                    using schd_t = decltype(schedule(get_scheduler(std::declval<EnvT>())));
-                    return completion_signatures_of_t<schd_t, EnvT>{};
-                }
-                else {
-                    static_assert(false);
-                }
-            };
+        template<typename SenderT, typename... EnvTs>
+        [[nodiscard]] static consteval auto get_completion_signatures() {
+            if constexpr (requires{ get_scheduler(std::declval<EnvTs>()...); }) {
+                using schd_t = decltype(schedule(get_scheduler(std::declval<EnvTs>()...)));
+                return completion_signatures_of_t<schd_t, EnvTs...>{};
+            }
+            else {
+                static_assert(false);
+            }
+        }
 
         static constexpr auto get_state =
             []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver)

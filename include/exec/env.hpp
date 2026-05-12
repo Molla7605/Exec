@@ -25,13 +25,17 @@ namespace exec {
     template<typename TagT, typename ValueT>
     prop(TagT, ValueT) -> prop<TagT, std::decay_t<ValueT>>;
 
+    template<typename TagT, typename ValueT>
+    prop(TagT, std::reference_wrapper<ValueT>) -> prop<TagT, ValueT&>;
+
+    template<typename TagT, typename ValueT>
+    prop(TagT, std::reference_wrapper<const ValueT>) -> prop<TagT, const ValueT&>;
+
     template<queryable... PropTs>
-    requires std::is_same_v<details::meta_unique_t<details::type_holder<PropTs...>>, details::type_holder<PropTs...>>
-    struct env : private details::product_type<PropTs...> {
-    private:
-        template<typename IndexT, typename TagT>
+    class env : public details::product_type<PropTs...> {
+        template<typename TagT, typename IndexT>
         struct has_query_filter {
-            static constexpr bool value = has_query<details::meta_index_t<IndexT::value, PropTs...>, TagT>;
+            static constexpr bool value = details::has_query<details::meta_index_t<IndexT::value, PropTs...>, TagT>;
         };
 
         template<typename...>
@@ -39,19 +43,21 @@ namespace exec {
 
         template<std::size_t... INDICES>
         struct make_index_constant_sequence<std::index_sequence<INDICES...>> {
-            using type = details::type_holder<std::index_sequence<INDICES>...>;
+            using type = details::type_holder<std::integral_constant<std::size_t, INDICES>...>;
         };
 
     public:
-        template<typename TagT>
-        requires (has_query<PropTs, TagT> || ...)
-        [[nodiscard]] constexpr decltype(auto) query(TagT) const noexcept {
+        template<typename TagT, typename... ArgTs>
+        requires (details::has_query<PropTs, TagT> || ...)
+        [[nodiscard]] constexpr decltype(auto) query(TagT, ArgTs&&... args) const noexcept {
             using candidates_t =
                 details::meta_filter_t<TagT,
                                        typename make_index_constant_sequence<std::index_sequence_for<PropTs...>>::type,
                                        has_query_filter>;
 
-            return this->template get<details::meta_index_of_t<0, candidates_t>::value>().query(TagT{});
+            using prop_t = details::meta_index_of_t<0, candidates_t>::value;
+
+            return this->template get<prop_t>().query(TagT{}, std::forward<ArgTs>(args)...);
         }
 
     };
