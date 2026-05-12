@@ -16,8 +16,9 @@ namespace exec {
         requires(const std::remove_cvref_t<T>& rcvr) {
             { get_env(rcvr) } -> queryable;
         } &&
-        std::is_move_constructible_v<std::remove_cvref_t<T>> &&
-        std::constructible_from<std::remove_cvref_t<T>, T>;
+        std::move_constructible<std::remove_cvref_t<T>> &&
+        std::constructible_from<std::remove_cvref_t<T>, T> &&
+        std::is_nothrow_move_constructible_v<std::remove_cvref_t<T>>;
 
 
 }
