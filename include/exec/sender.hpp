@@ -1,10 +1,8 @@
 #ifndef EXEC_SENDER_HPP
 #define EXEC_SENDER_HPP
 
-#include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
 #include "exec/queryable.hpp"
-#include "exec/receiver.hpp"
 
 #include "exec/details/valid_completion_signatures.hpp"
 
@@ -42,13 +40,6 @@ namespace exec {
                 details::valid_completion_signatures;
         };
 
-    template<typename SenderT, typename ReceiverT>
-    concept sender_to =
-        sender_in<SenderT, env_of_t<ReceiverT>> &&
-        receiver_of<ReceiverT, completion_signatures_of_t<SenderT, env_of_t<ReceiverT>>> &&
-        requires(SenderT&& sndr, ReceiverT&& rcvr) {
-            connect(std::forward<SenderT>(sndr), std::forward<ReceiverT>(rcvr));
-        };
 }
 
 #endif // !EXEC_SENDER_HPP
