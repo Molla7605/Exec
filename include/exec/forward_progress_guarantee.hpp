@@ -1,8 +1,6 @@
 #ifndef EXEC_FORWARD_PROGRESS_GUARANTEE_HPP
 #define EXEC_FORWARD_PROGRESS_GUARANTEE_HPP
 
-#include "exec/scheduler.hpp"
-
 namespace exec {
     enum class forward_progress_guarantee {
         concurrent,
@@ -11,7 +9,7 @@ namespace exec {
     };
 
     struct get_forward_progress_guarantee_t {
-        template<scheduler SchedulerT>
+        template<typename SchedulerT>
         [[nodiscard]] constexpr forward_progress_guarantee operator()(const SchedulerT& scheduler) const noexcept {
             if constexpr (requires { scheduler.query(*this); }) {
                 return scheduler.query(*this);
