@@ -1,7 +1,6 @@
 #ifndef EXEC_RECEIVER_HPP
 #define EXEC_RECEIVER_HPP
 
-#include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
 
 #include <concepts>
@@ -20,6 +19,13 @@ namespace exec {
         std::constructible_from<std::remove_cvref_t<T>, T> &&
         std::is_nothrow_move_constructible_v<std::remove_cvref_t<T>>;
 
+    template<typename T, typename ChildOperationT>
+    concept inline_receiver =
+        receiver<T> &&
+        requires (ChildOperationT* child) {
+            { std::remove_cvref_t<T>::make_receiver_for(child) } noexcept ->
+                std::same_as<std::remove_cvref_t<T>>;
+        };
 
 }
 
