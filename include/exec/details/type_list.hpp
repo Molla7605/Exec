@@ -33,6 +33,9 @@ namespace exec::details {
 
     template<typename T>
     using empty_list_of_t = list_of<T>::template type<>;
+
+    template<valid_type_list T>
+    inline constexpr bool is_empty_list_v = std::is_same_v<T, empty_list_of_t<T>>;
 }
 
 #endif // !EXEC_DETAILS_TYPE_LIST_HPP
