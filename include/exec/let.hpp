@@ -182,7 +182,7 @@ namespace exec {
             constexpr let_state(SenderT&& sender, InvocableT invocable, ReceiverT& receiver) :
                 invocable(std::move(invocable)),
                 env(make_env(sender, exec::get_env(receiver))),
-                ops_variant(std::in_place_type<op_t>, std::forward<SenderT>(sender), inner_receiver{ *this, receiver }) {}
+                ops_variant(std::in_place_type<op_t>, emplace_from{ [&]() { return exec::connect(std::forward<SenderT>(sender), inner_receiver{ *this, receiver }); } }) {}
         };
 
         template<typename SenderT, typename... EnvTs>
