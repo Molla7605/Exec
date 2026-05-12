@@ -83,7 +83,7 @@ namespace exec::details {
     };
 
     template<typename... PipeableTs>
-    pipe(sender_adapter_closure<pipe<PipeableTs...>>, product_type<PipeableTs...>) -> pipe<std::decay_t<PipeableTs>...>;
+    pipe(sender_adapter_closure<pipe<PipeableTs...>>, product_type<PipeableTs...>) -> pipe<PipeableTs...>;
 
     struct pipe_operator {
         template<sender SenderT, pipeable Self>

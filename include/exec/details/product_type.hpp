@@ -42,7 +42,7 @@ namespace exec::details {
     };
 
     template<typename... Ts>
-    struct product_type : product_type_impl<std::make_index_sequence<sizeof...(Ts)>, Ts...> {
+    struct product_type : product_type_impl<std::index_sequence_for<Ts...>, Ts...> {
         static constexpr std::size_t SIZE = sizeof...(Ts);
     };
 

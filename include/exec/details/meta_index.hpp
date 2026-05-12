@@ -13,7 +13,7 @@ namespace exec::details {
 
     template<typename SizeT, SizeT TARGET_INDEX, SizeT INDEX>
     struct meta_index<std::integral_constant<SizeT, TARGET_INDEX>, std::integral_constant<SizeT, INDEX>> {
-        static_assert("Index out of ranged.");
+        static_assert("Index out of range");
     };
 
     template<typename SizeT, SizeT TARGET_INDEX, SizeT INDEX, typename CurrentT, typename... CandidateTs>

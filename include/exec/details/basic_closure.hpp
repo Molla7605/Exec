@@ -22,7 +22,7 @@ namespace exec::details {
     };
 
     template<typename TagT, typename... ArgTs>
-    basic_closure(sender_adapter_closure<TagT>, product_type<ArgTs...>) -> basic_closure<TagT, std::decay_t<ArgTs>...>;
+    basic_closure(sender_adapter_closure<TagT>, product_type<ArgTs...>) -> basic_closure<TagT, ArgTs...>;
 }
 
 #endif // !EXEC_DETAILS_BASIC_CLOSURE_HPP

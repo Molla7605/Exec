@@ -13,7 +13,7 @@ namespace exec {
         std::copyable<T> &&
         requires(const T token) {
             { token.try_associate() } -> scope_association;
-            { token.wrap(just()) } -> sender_in<env_of_t<std::remove_cvref<decltype(just())>>>;
+            { token.wrap(just()) } -> sender_in<env_of_t<std::remove_cvref_t<decltype(just())>>>;
         };
 }
 

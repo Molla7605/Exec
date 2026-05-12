@@ -27,7 +27,7 @@ namespace exec {
 
         template<receiver ReceiverT>
         struct operation_state : operation_state_base {
-            using operation_state_concept = operation_state_t;
+            using operation_state_concept = operation_state_tag;
 
             explicit operation_state(run_loop* loop, receiver auto&& receiver) noexcept :
                 loop(loop),
@@ -69,10 +69,10 @@ namespace exec {
                     }
                 };
 
-                using sender_concept = sender_t;
 
                 using completion_signatures =
                     completion_signatures<set_value_t(), set_error_t(std::exception_ptr), set_stopped_t()>;
+                using sender_concept = sender_tag;
 
                 run_loop* loop;
 
@@ -85,7 +85,7 @@ namespace exec {
                 }
             };
 
-            using scheduler_concept = scheduler_t;
+            using scheduler_concept = scheduler_tag;
 
             run_loop* loop;
 
