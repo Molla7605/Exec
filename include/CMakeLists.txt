@@ -10,6 +10,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/base_stop_callback.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_closure.hpp
         ${EXEC_DETAILS_HEADER_DIR}/basic_sender.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/completion_signature_info.hpp
         ${EXEC_DETAILS_HEADER_DIR}/conditional_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/counting_scope_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/decayed_tuple.hpp
@@ -21,25 +22,29 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/indirect_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/is_nothrow_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/join_env.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/merge_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_add.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_append.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_bind.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_filter.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/meta_function.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_index.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_merge.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_not.hpp
         ${EXEC_DETAILS_HEADER_DIR}/meta_reverse.hpp
         ${EXEC_DETAILS_HEADER_DIR}/pipe.hpp
         ${EXEC_DETAILS_HEADER_DIR}/product_type.hpp
-		${EXEC_DETAILS_HEADER_DIR}/sched_attrs.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/receiver_of.hpp
+		${EXEC_DETAILS_HEADER_DIR}/sched_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/scope_join.hpp
 		${EXEC_DETAILS_HEADER_DIR}/scope_state_flags.hpp
-		${EXEC_DETAILS_HEADER_DIR}/signature_info.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/sender_to.hpp
         ${EXEC_DETAILS_HEADER_DIR}/spin_lock_hint.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_state.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stop_when.hpp
         ${EXEC_DETAILS_HEADER_DIR}/stoppable_callback_for.hpp
         ${EXEC_DETAILS_HEADER_DIR}/sync_wait_state.hpp
+        ${EXEC_DETAILS_HEADER_DIR}/try_query.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_holder.hpp
         ${EXEC_DETAILS_HEADER_DIR}/type_list.hpp
         ${EXEC_DETAILS_HEADER_DIR}/unique_template.hpp
