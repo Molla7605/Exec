@@ -10,12 +10,12 @@
 namespace exec {
     template<typename T>
     concept allocator =
-        requires(T alloc, std::size_t size) {
-            { *alloc.allocate(size) } -> std::same_as<typename T::value_type&>;
+        requires(std::remove_cvref_t<T> alloc, std::size_t size) {
+            { alloc.allocate(size) } -> std::same_as<typename std::remove_cvref_t<T>::value_type*>;
             { alloc.deallocate(alloc.allocate(size), size) };
         } &&
-        std::copy_constructible<T> &&
-        std::equality_comparable<T>;
+        std::copy_constructible<std::remove_cvref_t<T>> &&
+        std::equality_comparable<std::remove_cvref_t<T>>;
 
     struct get_allocator_t {
         template<typename EnvT>
