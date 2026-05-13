@@ -55,9 +55,9 @@ namespace exec {
                                        typename make_index_constant_sequence<std::index_sequence_for<PropTs...>>::type,
                                        has_query_filter>;
 
-            using prop_t = details::meta_index_of_t<0, candidates_t>::value;
+            using index_t = details::meta_index_of_t<0, candidates_t>;
 
-            return this->template get<prop_t>().query(TagT{}, std::forward<ArgTs>(args)...);
+            return this->template get<index_t::value>().query(TagT{}, std::forward<ArgTs>(args)...);
         }
 
     };
