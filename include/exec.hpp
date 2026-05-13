@@ -3,6 +3,7 @@
 
 #include "exec/allocator.hpp"
 #include "exec/associate.hpp"
+#include "exec/bulk.hpp"
 #include "exec/completion_signatures.hpp"
 #include "exec/completions.hpp"
 #include "exec/continues_on.hpp"
