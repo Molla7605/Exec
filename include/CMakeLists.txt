@@ -19,6 +19,7 @@ INTERFACE
         ${EXEC_DETAILS_HEADER_DIR}/emplace_from.hpp
         ${EXEC_DETAILS_HEADER_DIR}/forward_env.hpp
         ${EXEC_DETAILS_HEADER_DIR}/gather_signatures.hpp
+		${EXEC_DETAILS_HEADER_DIR}/hide_sched.hpp
         ${EXEC_DETAILS_HEADER_DIR}/indirect_meta_apply.hpp
         ${EXEC_DETAILS_HEADER_DIR}/is_nothrow_signatures.hpp
         ${EXEC_DETAILS_HEADER_DIR}/join_env.hpp
@@ -53,11 +54,13 @@ INTERFACE
 		${EXEC_DETAILS_HEADER_DIR}/write_env.hpp
 
         ${EXEC_HEADER_DIR}/allocator.hpp
+		${EXEC_HEADER_DIR}/apply_sender.hpp
         ${EXEC_HEADER_DIR}/associate.hpp
         ${EXEC_HEADER_DIR}/completion_signatures.hpp
         ${EXEC_HEADER_DIR}/completions.hpp
         ${EXEC_HEADER_DIR}/continues_on.hpp
         ${EXEC_HEADER_DIR}/counting_scopes.hpp
+		${EXEC_HEADER_DIR}/domain.hpp
         ${EXEC_HEADER_DIR}/env.hpp
 		${EXEC_HEADER_DIR}/forward_progress_guarantee.hpp
 		${EXEC_HEADER_DIR}/forwarding_query.hpp
@@ -79,6 +82,7 @@ INTERFACE
         ${EXEC_HEADER_DIR}/sync_wait.hpp
         ${EXEC_HEADER_DIR}/then.hpp
         ${EXEC_HEADER_DIR}/transform_completion_signatures.hpp
+		${EXEC_HEADER_DIR}/transform_sender.hpp
 
         ${CMAKE_CURRENT_SOURCE_DIR}/exec.hpp
 )

@@ -2,11 +2,13 @@
 #define EXEC_EXEC_HPP
 
 #include "exec/allocator.hpp"
+#include "exec/apply_sender.hpp"
 #include "exec/associate.hpp"
 #include "exec/completion_signatures.hpp"
 #include "exec/completions.hpp"
 #include "exec/continues_on.hpp"
 #include "exec/counting_scopes.hpp"
+#include "exec/domain.hpp"
 #include "exec/env.hpp"
 #include "exec/forward_progress_guarantee.hpp"
 #include "exec/forwarding_query.hpp"
@@ -28,5 +30,6 @@
 #include "exec/sync_wait.hpp"
 #include "exec/then.hpp"
 #include "exec/transform_completion_signatures.hpp"
+#include "exec/transform_sender.hpp"
 
 #endif // !EXEC_EXEC_HPP
