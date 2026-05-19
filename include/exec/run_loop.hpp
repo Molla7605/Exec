@@ -72,7 +72,7 @@ namespace exec {
             }
         };
 
-        struct scheduler {
+        struct scheduler : env {
             struct sender {
                 using sender_concept = sender_tag;
 
@@ -98,12 +98,6 @@ namespace exec {
             };
 
             using scheduler_concept = scheduler_tag;
-
-            run_loop* loop;
-
-            [[nodiscard]] auto get_env() const noexcept {
-                return env{ loop };
-            }
 
             [[nodiscard]] constexpr sender schedule() const {
                 return sender{ loop };

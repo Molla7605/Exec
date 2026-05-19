@@ -51,7 +51,7 @@ namespace exec {
                 return get_completion_domain_t<exec::set_value_t>{}(attrs, std::forward<EnvTs>(envs)...);
             }
             else if constexpr (requires {
-                    auto(get_completion_scheduler<CompletionT>(std::declval<AttrsT>(), std::declval<EnvTs>()...));
+                    get_completion_scheduler<CompletionT>(std::declval<AttrsT>(), std::declval<EnvTs>()...);
                     details::try_query(get_completion_scheduler<CompletionT>(std::declval<AttrsT>(),
                                                                              std::declval<EnvTs>()...),
                                        get_completion_domain_t<exec::set_value_t>{},
@@ -73,7 +73,6 @@ namespace exec {
         [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
             return true;
         }
-
     };
     template<typename CompletionT = void>
     inline constexpr get_completion_domain_t<CompletionT> get_completion_domain{};

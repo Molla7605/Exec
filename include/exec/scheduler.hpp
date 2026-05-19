@@ -1,6 +1,7 @@
 #ifndef EXEC_SCHEDULER_HPP
 #define EXEC_SCHEDULER_HPP
 
+#include "exec/completions.hpp"
 #include "exec/forwarding_query.hpp"
 #include "exec/forward_progress_guarantee.hpp"
 #include "exec/queryable.hpp"
@@ -8,6 +9,7 @@
 
 #include "exec/details/try_query.hpp"
 #include "exec/details/hide_sched.hpp"
+#include "exec/details/meta_index.hpp"
 
 #include <concepts>
 #include <type_traits>
@@ -67,39 +69,44 @@ namespace exec {
     private:
         template<typename SchedulerT, typename... EnvTs>
         [[nodiscard]] constexpr auto recurse(const SchedulerT& scheduler, EnvTs&&... envs) const noexcept {
-            auto sch2 = details::try_query(scheduler,
-                                           get_completion_scheduler_t<set_value_t>{},
-                                           std::forward<EnvTs>(envs)...);
+            if constexpr (details::has_query<SchedulerT, get_completion_scheduler_t<exec::set_value_t>, EnvTs...> ||
+                          details::has_query<SchedulerT, get_completion_scheduler_t<exec::set_value_t>>)
+            {
+                auto sch2 = details::try_query(scheduler,
+                                               get_completion_scheduler_t<exec::set_value_t>{},
+                                               std::forward<EnvTs>(envs)...);
 
-            if constexpr (std::is_same_v<SchedulerT, std::remove_cvref_t<decltype(sch2)>>) {
-                if (sch2 != scheduler) {
+                if constexpr (std::is_same_v<SchedulerT, std::remove_cvref_t<decltype(sch2)>>) {
+                    if (sch2 != scheduler) {
+                        return recurse(sch2, std::forward<EnvTs>(envs)...);
+                    }
+
+                    return sch2;
+                }
+                else {
                     return recurse(sch2, std::forward<EnvTs>(envs)...);
                 }
-
-                return sch2;
             }
             else {
-                return recurse(sch2, std::forward<EnvTs>(envs)...);
+                return scheduler;
             }
         }
 
     public:
         template<typename QueryableT, typename... EnvTs>
-        requires details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>
+        requires (details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...> ||
+                  (sizeof...(EnvTs) == 1 && details::has_query<details::meta_index_t<0, EnvTs...>, get_start_scheduler_t>) ||
+                  scheduler<QueryableT>)
         [[nodiscard]] constexpr auto operator()(const QueryableT& queryable, EnvTs&&... envs) const noexcept {
-            return recurse(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
-        }
-
-        template<typename QueryableT, typename... EnvTs>
-        requires (details::has_query<QueryableT, get_start_scheduler_t, EnvTs...> && !details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>)
-        [[nodiscard]] constexpr auto operator()(const QueryableT& queryable, EnvTs&&... envs) const noexcept {
-            return recurse(details::try_query(queryable, get_start_scheduler, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
-        }
-
-        template<scheduler SchedulerT, typename... EnvTs>
-        requires (!details::has_query<SchedulerT, get_completion_scheduler_t, EnvTs...>)
-        [[nodiscard]] constexpr auto operator()(const SchedulerT& scheduler, EnvTs&&...) const noexcept {
-            return auto(scheduler);
+            if constexpr (details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>) {
+                return recurse(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
+            }
+            else if constexpr (sizeof...(EnvTs) == 1 && details::has_query<details::meta_index_t<0, EnvTs...>, get_start_scheduler_t>) {
+                return recurse(details::try_query(std::forward<EnvTs>(envs)..., get_start_scheduler), std::forward<EnvTs>(envs)...);
+            }
+            else {
+                return auto(queryable);
+            }
         }
 
         [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
