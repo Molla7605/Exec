@@ -7,6 +7,7 @@
 #include "exec/sender.hpp"
 
 #include "exec/details/try_query.hpp"
+#include "exec/details/hide_sched.hpp"
 
 #include <concepts>
 #include <type_traits>
@@ -37,7 +38,7 @@ namespace exec {
     template<scheduler T>
     using schedule_result_t = decltype(schedule(std::declval<T>()));
 
-    struct get_scheduler_t {
+    struct get_start_scheduler_t {
         template<typename EnvT>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
             return env.query(*this);
@@ -47,7 +48,7 @@ namespace exec {
             return true;
         }
     };
-    inline constexpr get_scheduler_t get_scheduler{};
+    inline constexpr get_start_scheduler_t get_start_scheduler{};
 
     struct get_delegation_scheduler_t {
         template<typename EnvT>
@@ -84,15 +85,21 @@ namespace exec {
 
     public:
         template<typename QueryableT, typename... EnvTs>
+        requires details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>
         [[nodiscard]] constexpr auto operator()(const QueryableT& queryable, EnvTs&&... envs) const noexcept {
-            if constexpr (details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>) {
-                return recurse(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
-            }
-            else {
-                static_assert(scheduler<QueryableT>);
+            return recurse(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
+        }
 
-                return details::try_query(queryable, *this, std::forward<EnvTs>(envs)...);
-            }
+        template<typename QueryableT, typename... EnvTs>
+        requires (details::has_query<QueryableT, get_start_scheduler_t, EnvTs...> && !details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>)
+        [[nodiscard]] constexpr auto operator()(const QueryableT& queryable, EnvTs&&... envs) const noexcept {
+            return recurse(details::try_query(queryable, get_start_scheduler, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
+        }
+
+        template<scheduler SchedulerT, typename... EnvTs>
+        requires (!details::has_query<SchedulerT, get_completion_scheduler_t, EnvTs...>)
+        [[nodiscard]] constexpr auto operator()(const SchedulerT& scheduler, EnvTs&&...) const noexcept {
+            return auto(scheduler);
         }
 
         [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
@@ -102,17 +109,17 @@ namespace exec {
     template<typename CompletionT>
     inline constexpr get_completion_scheduler_t<CompletionT> get_completion_scheduler{};
 
-    struct get_start_scheduler_t {
+    struct get_scheduler_t {
         template<typename EnvT>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
-            return env.query(*this);
+            return get_completion_scheduler<exec::set_value_t>(env.query(*this), details::hide_sched(env));
         }
 
         [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {
             return true;
         }
     };
-    inline constexpr get_start_scheduler_t get_start_scheduler{};
+    inline constexpr get_scheduler_t get_scheduler{};
 }
 
 #endif // !EXEC_SCHEDULER_HPP

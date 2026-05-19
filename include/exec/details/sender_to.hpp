@@ -2,10 +2,13 @@
 #define EXEC_DETAILS_SENDER_TO_HPP
 
 #include "exec/completion_signatures.hpp"
-#include "exec/receiver.hpp"
+#include "exec/connect.hpp"
+#include "exec/env.hpp"
 #include "exec/sender.hpp"
 
 #include "exec/details/receiver_of.hpp"
+
+#include <utility>
 
 namespace exec::details {
     template<typename SenderT, typename ReceiverT>

@@ -6,6 +6,7 @@
 #include "exec/associate.hpp"
 #include "exec/completion_signatures.hpp"
 #include "exec/completions.hpp"
+#include "exec/connect.hpp"
 #include "exec/continues_on.hpp"
 #include "exec/counting_scopes.hpp"
 #include "exec/domain.hpp"

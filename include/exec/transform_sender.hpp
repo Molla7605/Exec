@@ -1,11 +1,11 @@
 #ifndef EXEC_TRANSFORM_SENDER_HPP
 #define EXEC_TRANSFORM_SENDER_HPP
 
+#include "exec/completions.hpp"
+#include "exec/operation_state.hpp"
 #include "exec/domain.hpp"
-#include "exec/sender.hpp"
 #include "exec/queryable.hpp"
-
-#include "exec/details/env_traits.hpp"
+#include "exec/sender.hpp"
 
 namespace exec::details {
     template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
@@ -16,8 +16,8 @@ namespace exec::details {
         return domain.transform_sender(tag, std::forward<SenderT>(sender), env);
     }
 
-    template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
-    [[nodiscard]] constexpr decltype(auto) transform_sender(DomainT domain, TagT tag, SenderT&& sender, const EnvT& env)
+    template<typename TagT, typename SenderT, typename EnvT>
+    [[nodiscard]] constexpr decltype(auto) transform_sender(auto, TagT tag, SenderT&& sender, const EnvT& env)
         noexcept(noexcept(default_domain{}.transform_sender(tag, std::declval<SenderT>(), std::declval<EnvT>())))
     {
         return default_domain{}.transform_sender(tag, std::forward<SenderT>(sender), std::forward<EnvT>(env));
@@ -33,7 +33,7 @@ namespace exec::details {
         }
         else {
             auto sender2 = transform_sender(domain, tag, std::forward<SenderT>(sender), env);
-            if constexpr (std::is_same_v<TagT, start_t>) {
+            if constexpr (std::is_same_v<TagT, exec::start_t>) {
                 auto domain2 = domain;
 
                 return transform_recurse(domain2, tag, std::move(sender2), env);

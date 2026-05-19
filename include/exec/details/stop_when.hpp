@@ -1,6 +1,7 @@
 #ifndef EXEC_DETAILS_STOP_WHEN_HPP
 #define EXEC_DETAILS_STOP_WHEN_HPP
 
+#include "exec/connect.hpp"
 #include "exec/sender.hpp"
 #include "exec/stop_token.hpp"
 

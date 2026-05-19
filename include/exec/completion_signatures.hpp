@@ -1,12 +1,10 @@
 #ifndef EXEC_COMPLETION_SIGNATURES_HPP
 #define EXEC_COMPLETION_SIGNATURES_HPP
 
-#include "exec/env.hpp"
-
-#include "exec/details/meta_filter.hpp"
-#include "exec/details/type_holder.hpp"
-#include "exec/details/meta_function.hpp"
 #include "exec/details/completion_signature_info.hpp"
+#include "exec/details/meta_filter.hpp"
+#include "exec/details/meta_function.hpp"
+#include "exec/details/type_holder.hpp"
 
 #include <cstddef>
 #include <type_traits>

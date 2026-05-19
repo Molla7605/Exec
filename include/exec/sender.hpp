@@ -1,6 +1,7 @@
 #ifndef EXEC_SENDER_HPP
 #define EXEC_SENDER_HPP
 
+#include "exec/completion_signatures.hpp"
 #include "exec/env.hpp"
 #include "exec/queryable.hpp"
 
@@ -18,25 +19,15 @@ namespace exec {
         std::is_move_constructible_v<std::remove_cvref_t<T>> &&
         std::constructible_from<std::remove_cvref_t<T>, T>;
 
-    struct connect_t {
-        template<typename SenderT, typename ReceiverT>
-        [[nodiscard]] constexpr decltype(auto) operator()(SenderT&& sender, ReceiverT&& receiver) const
-            noexcept(noexcept(std::declval<SenderT>().connect(std::declval<ReceiverT>())))
-        {
-            return std::forward<SenderT>(sender).connect(std::forward<ReceiverT>(receiver));
-        }
-    };
-    inline constexpr connect_t connect{};
-
-    template<typename SenderT, typename ReceiverT>
-    using connect_result_t = decltype(connect(std::declval<SenderT>(), std::declval<ReceiverT>()));
-
     template<typename SenderT, typename... EnvTs>
     concept sender_in =
         sender<SenderT> &&
         (sizeof...(EnvTs) <= 1) &&
         (queryable<EnvTs> && ...) &&
         details::is_constant<get_completion_signatures<SenderT, EnvTs...>()>;
+
+    template<typename T>
+    using tag_of_t = std::remove_cvref_t<decltype(std::declval<T>().template get<0>())>;
 }
 
 #endif // !EXEC_SENDER_HPP

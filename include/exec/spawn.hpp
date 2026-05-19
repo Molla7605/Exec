@@ -2,6 +2,7 @@
 #define EXEC_SPAWN_HPP
 
 #include "exec/allocator.hpp"
+#include "exec/connect.hpp"
 #include "exec/env.hpp"
 #include "exec/receiver.hpp"
 #include "exec/sender.hpp"

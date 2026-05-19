@@ -2,6 +2,7 @@
 #define EXEC_DETAILS_BASIC_SENDER_HPP
 
 #include "exec/completions.hpp"
+#include "exec/connect.hpp"
 #include "exec/env.hpp"
 #include "exec/operation_state.hpp"
 #include "exec/receiver.hpp"
@@ -15,9 +16,6 @@
 #include <utility>
 
 namespace exec::details {
-    template<typename T>
-    using tag_of_t = std::remove_cvref_t<decltype(std::declval<T>().template get<0>())>;
-
     struct default_impls {
         static constexpr auto get_attrs =
             []<typename... ChildTs>(const auto&, const ChildTs&... children) noexcept -> decltype(auto) {

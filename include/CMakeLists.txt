@@ -58,6 +58,7 @@ INTERFACE
         ${EXEC_HEADER_DIR}/associate.hpp
         ${EXEC_HEADER_DIR}/completion_signatures.hpp
         ${EXEC_HEADER_DIR}/completions.hpp
+		${EXEC_HEADER_DIR}/connect.hpp
         ${EXEC_HEADER_DIR}/continues_on.hpp
         ${EXEC_HEADER_DIR}/counting_scopes.hpp
 		${EXEC_HEADER_DIR}/domain.hpp

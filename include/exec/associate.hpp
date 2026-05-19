@@ -3,6 +3,7 @@
 
 #include "exec/completions.hpp"
 #include "exec/completion_signatures.hpp"
+#include "exec/connect.hpp"
 #include "exec/operation_state.hpp"
 #include "exec/scope_token.hpp"
 #include "exec/sender.hpp"
