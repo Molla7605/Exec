@@ -50,17 +50,21 @@ namespace exec {
             else if constexpr (std::is_same_v<CompletionT, void>) {
                 return get_completion_domain_t<exec::set_value_t>{}(attrs, std::forward<EnvTs>(envs)...);
             }
-            else if constexpr (requires {
-                    get_completion_scheduler<CompletionT>(std::declval<AttrsT>(), std::declval<EnvTs>()...);
-                    details::try_query(get_completion_scheduler<CompletionT>(std::declval<AttrsT>(),
-                                                                             std::declval<EnvTs>()...),
-                                       get_completion_domain_t<exec::set_value_t>{},
-                                       std::declval<EnvTs>()...);
-                })
-            {
-                return details::try_query(get_completion_scheduler<CompletionT>(attrs, std::forward<EnvTs>(envs)...),
-                                          get_completion_domain_t<exec::set_value_t>{},
-                                          std::forward<EnvTs>(envs)...);
+            else if constexpr (std::invocable<get_completion_scheduler_t<CompletionT>, AttrsT, EnvTs...>) {
+                using schd_t =
+                    std::invoke_result_t<get_completion_scheduler_t<CompletionT>, AttrsT, EnvTs...>;
+
+                if constexpr (is_queryable<schd_t, get_completion_domain_t<exec::set_value_t>, EnvTs...>) {
+                    return details::try_query(get_completion_scheduler<CompletionT>(attrs, std::forward<EnvTs>(envs)...),
+                                              get_completion_domain_t<exec::set_value_t>{},
+                                              std::forward<EnvTs>(envs)...);
+                }
+                else if constexpr (sizeof...(EnvTs) > 0) {
+                    return default_domain{};
+                }
+                else {
+                    static_assert(false);
+                }
             }
             else if constexpr (sizeof...(EnvTs) > 0 && scheduler<AttrsT>){
                 return default_domain{};
@@ -83,10 +87,11 @@ namespace exec {
             if constexpr (details::has_query<EnvT, get_domain_t>) {
                 return auto(env.query(*this));
             }
-            else if constexpr (details::has_query<EnvT, get_scheduler_t> &&
-                               details::has_query<decltype(get_scheduler(std::declval<EnvT>())),
-                                                  get_completion_domain_t<exec::set_value_t>,
-                                                  decltype(details::hide_sched(std::declval<EnvT>()))>)
+            else if constexpr (
+                requires {
+                    get_scheduler(env);
+                    get_completion_domain<exec::set_value_t>(get_scheduler(env), details::hide_sched(env));
+                })
             {
                 return get_completion_domain<exec::set_value_t>(get_scheduler(env), details::hide_sched(env));
             }

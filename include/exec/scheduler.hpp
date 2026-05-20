@@ -67,24 +67,29 @@ namespace exec {
     template<typename>
     struct get_completion_scheduler_t {
     private:
+        template<typename QueryableT, typename TagT, typename... EnvTs>
+        static constexpr bool is_queryable =
+            details::has_query<QueryableT, TagT, EnvTs...> ||
+            details::has_query<QueryableT, TagT>;
+
         template<typename SchedulerT, typename... EnvTs>
-        [[nodiscard]] constexpr auto recurse(const SchedulerT& scheduler, EnvTs&&... envs) const noexcept {
-            if constexpr (details::has_query<SchedulerT, get_completion_scheduler_t<exec::set_value_t>, EnvTs...> ||
-                          details::has_query<SchedulerT, get_completion_scheduler_t<exec::set_value_t>>)
-            {
+        [[nodiscard]] constexpr auto recurse_query(const SchedulerT& scheduler, EnvTs&&... envs) const noexcept {
+            if constexpr (is_queryable<SchedulerT, get_completion_scheduler_t<exec::set_value_t>, EnvTs...>) {
                 auto sch2 = details::try_query(scheduler,
                                                get_completion_scheduler_t<exec::set_value_t>{},
                                                std::forward<EnvTs>(envs)...);
 
                 if constexpr (std::is_same_v<SchedulerT, std::remove_cvref_t<decltype(sch2)>>) {
-                    if (sch2 != scheduler) {
-                        return recurse(sch2, std::forward<EnvTs>(envs)...);
+                    while (sch2 != scheduler) {
+                        sch2 = details::try_query(sch2,
+                                                  get_completion_scheduler_t<exec::set_value_t>{},
+                                                  std::forward<EnvTs>(envs)...);
                     }
 
                     return sch2;
                 }
                 else {
-                    return recurse(sch2, std::forward<EnvTs>(envs)...);
+                    return recurse_query(sch2, std::forward<EnvTs>(envs)...);
                 }
             }
             else {
@@ -94,15 +99,15 @@ namespace exec {
 
     public:
         template<typename QueryableT, typename... EnvTs>
-        requires (details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...> ||
-                  (sizeof...(EnvTs) == 1 && details::has_query<details::meta_index_t<0, EnvTs...>, get_start_scheduler_t>) ||
+        requires (is_queryable<QueryableT, get_completion_scheduler_t, EnvTs...> ||
+                  (sizeof...(EnvTs) > 0 && details::has_query<details::meta_index_t<0, EnvTs...>, get_start_scheduler_t>) ||
                   scheduler<QueryableT>)
         [[nodiscard]] constexpr auto operator()(const QueryableT& queryable, EnvTs&&... envs) const noexcept {
-            if constexpr (details::has_query<QueryableT, get_completion_scheduler_t, EnvTs...>) {
-                return recurse(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
+            if constexpr (is_queryable<QueryableT, get_completion_scheduler_t, EnvTs...>) {
+                return recurse_query(details::try_query(queryable, *this, std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
             }
-            else if constexpr (sizeof...(EnvTs) == 1 && details::has_query<details::meta_index_t<0, EnvTs...>, get_start_scheduler_t>) {
-                return recurse(details::try_query(std::forward<EnvTs>(envs)..., get_start_scheduler), std::forward<EnvTs>(envs)...);
+            else if constexpr (sizeof...(EnvTs) == 1 && std::invocable<get_start_scheduler_t, details::meta_index_t<0, EnvTs...>>) {
+                return recurse_query(get_start_scheduler(std::forward<EnvTs>(envs)...), std::forward<EnvTs>(envs)...);
             }
             else {
                 return auto(queryable);

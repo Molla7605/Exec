@@ -9,30 +9,47 @@
 
 namespace exec::details {
     template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
-    requires requires { std::declval<DomainT>().transform_sender(TagT{}, std::declval<SenderT>(), std::declval<EnvT>()); }
-    [[nodiscard]] constexpr decltype(auto) transform_sender(DomainT domain, TagT tag, SenderT&& sender, const EnvT& env)
-        noexcept(noexcept(domain.transform_sender(tag, std::declval<SenderT>(), env)))
-    {
-        return domain.transform_sender(tag, std::forward<SenderT>(sender), env);
-    }
+    concept transformable =
+        requires {
+            std::declval<DomainT>().transform_sender(TagT{}, std::declval<SenderT>(), std::declval<EnvT>());
+        };
 
-    template<typename TagT, typename SenderT, typename EnvT>
-    [[nodiscard]] constexpr decltype(auto) transform_sender(auto, TagT tag, SenderT&& sender, const EnvT& env)
-        noexcept(noexcept(default_domain{}.transform_sender(tag, std::declval<SenderT>(), std::declval<EnvT>())))
-    {
-        return default_domain{}.transform_sender(tag, std::forward<SenderT>(sender), std::forward<EnvT>(env));
-    }
+    template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
+    struct transform_sender_impl {
+        static constexpr bool nothrow =
+            noexcept(std::declval<DomainT>().transform_sender(TagT{}, std::declval<SenderT>(), std::declval<EnvT>()));
+
+        [[nodiscard]]
+        constexpr decltype(auto) operator()(DomainT domain, TagT tag, SenderT&& sender, const EnvT& env) noexcept(nothrow) {
+            return domain.transform_sender(tag, std::forward<SenderT>(sender), env);
+        }
+    };
+
+    template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
+    requires transformable<DomainT, TagT, SenderT, EnvT>
+    struct transform_sender_impl<DomainT, TagT, SenderT, EnvT> {
+        static constexpr bool nothrow =
+            noexcept(default_domain{}.transform_sender(TagT{}, std::declval<SenderT>(), std::declval<EnvT>()));
+
+        [[nodiscard]]
+        constexpr decltype(auto) operator()(DomainT, TagT tag, SenderT&& sender, const EnvT& env) noexcept(nothrow) {
+            return default_domain{}.transform_sender(tag, std::forward<SenderT>(sender), env);
+        }
+    };
 
     template<typename DomainT, typename TagT, typename SenderT, typename EnvT>
     [[nodiscard]] constexpr decltype(auto) transform_recurse(DomainT domain, TagT tag, SenderT&& sender, const EnvT& env) {
+        using transform_t = transform_sender_impl<DomainT, TagT, SenderT, EnvT>;
+
         using sender2_t =
-            decltype(transform_sender(domain, tag, std::declval<SenderT>(), std::declval<EnvT>()));
+            decltype(transform_t{}(domain, tag, std::declval<SenderT>(), std::declval<EnvT>()));
 
         if constexpr (std::is_same_v<std::remove_cvref_t<sender2_t>, std::remove_cvref_t<SenderT>>) {
-            return transform_sender(domain, tag, std::forward<SenderT>(sender), env);
+            return transform_t{}(domain, tag, std::forward<SenderT>(sender), env);
         }
         else {
-            auto sender2 = transform_sender(domain, tag, std::forward<SenderT>(sender), env);
+            auto sender2 = transform_t{}(domain, tag, std::forward<SenderT>(sender), env);
+
             if constexpr (std::is_same_v<TagT, exec::start_t>) {
                 auto domain2 = domain;
 
@@ -49,19 +66,7 @@ namespace exec::details {
 
 namespace exec {
     template<sender SenderT, queryable EnvT>
-    [[nodiscard]] constexpr decltype(auto) transform_sender(SenderT&& sender, const EnvT& env)
-        noexcept(
-            noexcept(
-                details::transform_sender(get_domain(env),
-                                          exec::start,
-                                          details::transform_recurse(get_completion_domain<>(get_env(sender), env),
-                                                                     exec::set_value,
-                                                                     std::declval<SenderT>(),
-                                                                     env),
-                                          env)
-            )
-        )
-    {
+    [[nodiscard]] constexpr decltype(auto) transform_sender(SenderT&& sender, const EnvT& env) {
         auto start_domain = get_domain(env);
         auto completion_domain = get_completion_domain<>(get_env(sender), env);
 
