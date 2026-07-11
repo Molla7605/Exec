@@ -18,7 +18,7 @@ namespace exec {
     struct spawn_operation_state_base {
         virtual ~spawn_operation_state_base() = default;
 
-        virtual void start() & noexcept = 0;
+        virtual void complete() & noexcept = 0;
     };
 
     struct spawn_receiver {
@@ -27,11 +27,11 @@ namespace exec {
         spawn_operation_state_base* op;
 
         void set_value() && noexcept {
-            exec::start(*op);
+            op->complete();
         }
 
         void set_stopped() && noexcept {
-            exec::start(*op);
+            op->complete();
         }
 
         [[nodiscard]] constexpr empty_env query(get_env_t) const noexcept {
@@ -57,12 +57,14 @@ namespace exec {
                 association(token.try_associate()),
                 op(exec::connect(std::forward<SenderT>(sender), spawn_receiver{ this })) {}
 
-        void start() & noexcept override {
+        void complete() & noexcept override {
             auto local_association = std::move(association);
-            auto local_alloc = std::move(alloc);
-
-            std::allocator_traits<alloc_t>::destroy(local_alloc, this);
-            std::allocator_traits<alloc_t>::deallocate(local_alloc, this, 1);
+            {
+                using traits_t = std::allocator_traits<alloc_t>::template rebind_traits<spawn_operation_state>;
+                typename traits_t::allocator_type local_alloc(alloc);
+                traits_t::destroy(local_alloc, this);
+                traits_t::deallocate(local_alloc, this, 1);
+            }
         }
 
         void run() noexcept {
@@ -70,7 +72,7 @@ namespace exec {
                 exec::start(op);
             }
             else {
-                exec::start(*this);
+                complete();
             }
         }
     };
@@ -78,28 +80,40 @@ namespace exec {
     struct spawn_t {
         template<sender SenderT, scope_token TokenT, typename EnvT = empty_env>
         void operator()(SenderT&& sender, TokenT token, EnvT env = {}) const {
-            auto get_alloc = [&] noexcept {
-                if constexpr (requires { env.query(get_allocator_t{}); }) {
+            auto new_sender = token.wrap(std::forward<SenderT>(sender));
+            auto new_env = [&]() -> decltype(auto) {
+                if constexpr (details::has_query<env_of_t<decltype(new_sender)>, get_allocator_t>) {
+                    return details::join_env(prop{ get_allocator, get_allocator(exec::get_env(new_sender)) }, env);
+                }
+                else {
+                    return env;
+                }
+            }();
+
+            static_assert(std::is_same_v<error_types_of_t<decltype(new_sender), decltype(new_env), details::type_holder>, details::type_holder<>>);
+
+            auto get_alloc = [&] {
+                if constexpr (details::has_query<EnvT, get_allocator_t>) {
                     return get_allocator(env);
                 }
-                if constexpr (requires { sender.query(get_allocator_t{}); }) {
-                    return get_allocator(sender);
+                else if constexpr (details::has_query<env_of_t<decltype(new_sender)>, get_allocator_t>) {
+                    return get_allocator(new_env);
                 }
-
-                return std::allocator<void>{};
+                else {
+                    return std::allocator<void>{};
+                }
             };
 
-            using src_alloc_t = std::remove_cvref_t<decltype(get_alloc())>;
-            using wrapped_sender_t = std::remove_cvref_t<decltype(token.wrap(std::declval<SenderT>()))>;
-            using op_t = spawn_operation_state<src_alloc_t, wrapped_sender_t, TokenT>;
+            using alloc_t = std::remove_cvref_t<decltype(get_alloc())>;
+            using op_t = decltype(spawn_operation_state{ std::declval<alloc_t>(), details::write_env(new_sender, new_env), token });
 
-            using traits_t = std::allocator_traits<src_alloc_t>::template rebind_traits<op_t>;
+            using traits_t = std::allocator_traits<alloc_t>::template rebind_traits<op_t>;
 
             typename traits_t::allocator_type alloc(get_alloc());
             op_t* op = traits_t::allocate(alloc, 1);
 
             try {
-                traits_t::construct(alloc, op, alloc, token.wrap(std::forward<SenderT>(sender)), token);
+                traits_t::construct(alloc, op, alloc, details::write_env(new_sender, new_env), token);
             }
             catch (...) {
                 traits_t::deallocate(alloc, op, 1);
