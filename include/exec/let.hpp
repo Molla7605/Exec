@@ -138,7 +138,7 @@ namespace exec {
             meta_append_back_t<OpsVariantT, op_t> ops_variant;
 
             template<typename TagT, typename... Ts>
-            constexpr void impl(ReceiverT receiver, TagT tag, Ts&&... args) noexcept {
+            constexpr void impl(ReceiverT& receiver, TagT tag, Ts&&... args) noexcept {
                 if constexpr (std::is_same_v<TagT, CompletionT>) {
                     using args_t = decayed_tuple<Ts...>;
                     using receiver_t = second_receiver<ReceiverT, env_t>;
