@@ -82,7 +82,7 @@ namespace exec {
         void operator()(SenderT&& sender, TokenT token, EnvT env = {}) const {
             auto new_sender = token.wrap(std::forward<SenderT>(sender));
             auto new_env = [&]() -> decltype(auto) {
-                if constexpr (details::has_query<env_of_t<decltype(new_sender)>, get_allocator_t>) {
+                if constexpr (!details::has_query<EnvT, get_allocator_t> && details::has_query<env_of_t<decltype(new_sender)>, get_allocator_t>) {
                     return details::join_env(prop{ get_allocator, get_allocator(exec::get_env(new_sender)) }, env);
                 }
                 else {
@@ -93,10 +93,7 @@ namespace exec {
             static_assert(std::is_same_v<error_types_of_t<decltype(new_sender), decltype(new_env), details::type_holder>, details::type_holder<>>);
 
             auto get_alloc = [&] {
-                if constexpr (details::has_query<EnvT, get_allocator_t>) {
-                    return get_allocator(env);
-                }
-                else if constexpr (details::has_query<env_of_t<decltype(new_sender)>, get_allocator_t>) {
+                if constexpr (details::has_query<std::remove_cvref_t<decltype(new_env)>, get_allocator_t>) {
                     return get_allocator(new_env);
                 }
                 else {
