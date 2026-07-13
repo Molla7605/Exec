@@ -10,11 +10,11 @@ namespace exec::details {
     struct dummy_receiver {
         using receiver_concept = exec::receiver_tag;
 
-        void set_value(...) && noexcept {
+        void set_value(auto&&...) && noexcept {
 
         }
 
-        void set_error(...) && noexcept {
+        void set_error(auto&&) && noexcept {
 
         }
 
