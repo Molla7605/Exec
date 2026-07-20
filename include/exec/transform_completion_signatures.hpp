@@ -30,7 +30,7 @@ namespace exec {
         !std::is_same_v<completion_signatures<>,
                         details::gather_signatures<set_stopped_t,
                                                    completion_signatures_of_t<SenderT, EnvT>,
-                                                   details::stopped_wrapper<completion_signatures<set_stopped_t()>>::type,
+                                                   details::stopped_wrapper<set_stopped_t()>::type,
                                                    completion_signatures>>;
 }
 

@@ -83,8 +83,8 @@ namespace exec {
     };
     inline constexpr get_env_t get_env{};
 
-    template<typename QueryableT>
-    using env_of_t = std::invoke_result_t<get_env_t, QueryableT>;
+    template<typename T>
+    using env_of_t = decltype(get_env(std::declval<T>()));
 }
 
 #endif // !EXEC_ENV_HPP

@@ -297,16 +297,13 @@ namespace exec {
 
     struct get_stop_token_t {
         template<typename EnvT>
-        requires std::invocable<const std::remove_cvref_t<EnvT>&, get_stop_token_t>
         [[nodiscard]] constexpr decltype(auto) operator()(const EnvT& env) const noexcept {
-            return env.query(*this);
-        }
-
-        template<typename EnvT>
-        [[nodiscard]] constexpr unstoppable_token decltype(auto) operator()(const EnvT&) const noexcept {
-            static never_stop_token token{};
-
-            return token;
+            if constexpr (requires { std::declval<EnvT>().query(std::declval<get_stop_token_t>()); }) {
+                return env.query(*this);
+            }
+            else {
+                return never_stop_token{};
+            }
         }
 
         [[nodiscard]] static consteval bool query(forwarding_query_t) noexcept {

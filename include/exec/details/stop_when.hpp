@@ -13,18 +13,20 @@ namespace exec::details {
     template<typename TokenT, typename CallbackT>
     class join_callback;
 
-    template<typename SenderT, typename ReceiverT>
+    template<stoppable_token STokenT, stoppable_token RTokenT>
     class join_token {
     public:
-        using stoken_t = stop_token_of_t<env_of_t<SenderT>>;
-        using rtoken_t = stop_token_of_t<env_of_t<ReceiverT>>;
+        static_assert(!exec::unstoppable_token<STokenT> && !exec::unstoppable_token<RTokenT>);
+
+        using stoken_t = STokenT;
+        using rtoken_t = RTokenT;
 
         template<typename CallbackT>
         using callback_type = join_callback<join_token, CallbackT>;
 
-        explicit join_token(const SenderT& sender, const ReceiverT& receiver) :
-            m_stoken(get_stop_token(exec::get_env(sender))),
-            m_rtoken(get_stop_token(exec::get_env(receiver))) {}
+        explicit join_token(STokenT stoken, RTokenT rtoken) :
+            m_stoken(stoken),
+            m_rtoken(rtoken) {}
 
         [[nodiscard]] consteval bool stop_possible() const noexcept {
             return m_stoken.stop_possible() || m_rtoken.stop_possible();
@@ -98,17 +100,26 @@ namespace exec::details {
 
         static constexpr auto get_state =
             []<typename SenderT, typename ReceiverT>(SenderT&& sender, ReceiverT& receiver) noexcept {
-                if constexpr (unstoppable_token<env_of_t<ReceiverT>>) {
+                if constexpr (unstoppable_token<stop_token_of_t<env_of_t<ReceiverT>>>) {
                     return exec::connect(
                         write_env(get_child<0>(std::forward<SenderT>(sender)),
-                                  prop{ get_stop_token, get_data(std::forward<SenderT>(sender)) }),
+                                  prop{ exec::get_stop_token, get_data(std::forward<SenderT>(sender)) }),
                         std::move(receiver)
                     );
                 }
                 else {
+                    using stoken_t = std::decay_t<data_of_t<SenderT>>;
+                    using rtoken_t = stop_token_of_t<env_of_t<ReceiverT>>;
+
                     return exec::connect(
                         write_env(get_child<0>(std::forward<SenderT>(sender)),
-                                  prop{ get_stop_token, join_token<SenderT, ReceiverT>(sender, receiver) }),
+                                  prop{
+                                      exec::get_stop_token,
+                                      join_token<stoken_t, rtoken_t>(
+                                          get_data(std::forward<SenderT>(sender)),
+                                          exec::get_stop_token(exec::get_env(receiver))
+                                      )
+                                  }),
                         std::move(receiver)
                     );
                 }
@@ -121,14 +132,14 @@ namespace exec::details {
     };
 
     struct stop_when_t {
-        template<sender SenderT, unstoppable_token TokenT>
-        [[nodiscard]] constexpr decltype(auto) operator()(SenderT&& sender, TokenT&&) const noexcept {
-            return std::forward<SenderT>(sender);
-        }
-
         template<sender SenderT, stoppable_token TokenT>
         [[nodiscard]] constexpr auto operator()(SenderT&& sender, TokenT&& token) const {
-            return details::make_sender(*this, std::forward<TokenT>(token), std::forward<SenderT>(sender));
+            if constexpr (unstoppable_token<TokenT>) {
+                return std::forward<SenderT>(sender);
+            }
+            else {
+                return details::make_sender(*this, std::forward<TokenT>(token), std::forward<SenderT>(sender));
+            }
         }
     };
     inline constexpr stop_when_t stop_when{};

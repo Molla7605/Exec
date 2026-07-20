@@ -28,5 +28,6 @@
 #include "exec/sync_wait.hpp"
 #include "exec/then.hpp"
 #include "exec/transform_completion_signatures.hpp"
+#include "exec/unstoppable.hpp"
 
 #endif // !EXEC_EXEC_HPP

@@ -4,6 +4,8 @@
 #include "exec/env.hpp"
 #include "exec/forwarding_query.hpp"
 
+#include "exec/details/env_traits.hpp"
+
 #include <type_traits>
 
 namespace exec::details {
@@ -12,10 +14,10 @@ namespace exec::details {
 
     template<typename EnvT>
     struct forwarding_env : EnvT {
-        template<typename QueryT>
-        requires is_forwarding_query<QueryT>
-        [[nodiscard]] constexpr decltype(auto) query(QueryT) const noexcept {
-            return static_cast<const EnvT&>(*this).query(QueryT{});
+        template<typename QueryT, typename... ArgTs>
+        requires has_query<EnvT, QueryT, ArgTs...> && is_forwarding_query<QueryT>
+        [[nodiscard]] constexpr decltype(auto) query(QueryT, ArgTs&&... args) const noexcept {
+            return static_cast<const EnvT&>(*this).query(QueryT{}, std::forward<ArgTs>(args)...);
         }
     };
 

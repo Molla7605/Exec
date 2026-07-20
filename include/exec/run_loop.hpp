@@ -37,7 +37,7 @@ namespace exec {
             ReceiverT receiver;
 
             void run() noexcept override {
-                if constexpr (unstoppable_token<stop_token_of_t<env_of_t<ReceiverT>>>) {
+                if constexpr (!unstoppable_token<stop_token_of_t<env_of_t<ReceiverT>>>) {
                     if (get_stop_token(exec::get_env(receiver)).stop_requested()) {
                         exec::set_stopped(std::move(receiver));
                     }
